@@ -1,14 +1,18 @@
 import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.IOException
+import java.lang
 import java.net.Socket
-import java.security.{KeyPairGenerator, MessageDigest, NoSuchAlgorithmException, SecureRandom, KeyPair}
+import java.security.{KeyPair, KeyPairGenerator, MessageDigest, NoSuchAlgorithmException, SecureRandom}
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 import scala.collection.JavaConversions._
 import java.security.spec.ECGenParameterSpec
 import java.security.Security
+import javax.xml.bind.DatatypeConverter
+
+import scala.util.control.Breaks
 
 class MessageHeader(
   var magic: Int = 0,
@@ -66,6 +70,8 @@ class MessageHandler(dummy:String = "dummy") {
   val client: Socket = new Socket("testnet-seed.bitcoin.jonasschnelli.ch", 18333)
   val din: DataInputStream = new DataInputStream(client.getInputStream())
   var dout: DataOutputStream = new DataOutputStream(client.getOutputStream())
+  val ALPHABET: Array[Char] = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz".toCharArray()
+  val ENCODED_ZERO = ALPHABET(0)
 
   def sha256(payload: Array[Byte]): Array[Byte] = {
     val md = MessageDigest.getInstance("SHA-256")
@@ -85,9 +91,46 @@ class MessageHandler(dummy:String = "dummy") {
     keyGen.generateKeyPair()
   }
 
+  def encodeWIF(buf: Array[Byte]): String = {
+    var tmp = new Array[Byte](buf.length + 1)
+    tmp(0) = Integer.parseUnsignedInt(String.valueOf(0xEF)).asInstanceOf[Byte]
+    System.arraycopy(tmp, 1, buf, 0, buf.length)
+    var hashed = hash256(tmp)
+    var tmp2 = new Array[Byte](tmp.length + 4)
+    System.arraycopy(tmp2, 0, tmp, 0, tmp.length)
+    System.arraycopy(tmp2, tmp.length, hashed, 0, 4)
+
+    return encodeBase58(tmp2)
+  }
+
+
+  def encodeBase58(buf: Array[Byte]): String = {
+    // 文字列を16進数にする
+    val s_hex = DatatypeConverter.printHexBinary(buf)
+    // 16進数 → 10進数
+    var decimal = java.lang.Long.valueOf(s_hex, 16)
+    // 10進数を58種類の文字列にする
+    val res = new StringBuffer()
+    while (decimal > 0) {
+      var c = ALPHABET(decimal.toInt % 58)
+      res.append(c)
+      decimal = decimal / 58
+    }
+    // 0byteのデータがないことを確認
+    val temp_b = buf.clone()
+    val b = new Breaks()
+    b.breakable {
+      for (i <- 0 until temp_b.length) {
+        if (temp_b(i) != 0) b.break()
+        res.append(ENCODED_ZERO)
+      }
+    }
+    res.reverse.toString()
+  }
+
   def longToLittleNosin(value: Long): Long = {
     val buf = ByteBuffer.allocate(8)
-    buf.putLong(java.lang.Long.parseUnsignedLong(String.valueOf(value)))
+    buf.putLong(lang.Long.parseUnsignedLong(String.valueOf(value)))
     buf.flip()
     buf.order(ByteOrder.LITTLE_ENDIAN)
     buf.getLong()
@@ -227,7 +270,7 @@ object Main{
   def main(args: Array[String]) {
     val messageHandler = new MessageHandler()
     val kpair = messageHandler.genSecKey()
-    //println(kpair.getPrivate().toString())
+    println(messageHandler.encodeBase58(kpair.getPrivate().getEncoded()))
 
     messageHandler.withBitcoinConnection()
   }

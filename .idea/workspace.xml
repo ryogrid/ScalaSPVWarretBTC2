@@ -2,34 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="a50a631c-94c6-4c66-80a2-c56740ccd8b2" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/bak/bcprov-ext-jdk13-159.jar" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/lib/bcprov-jdk15on-159.jar" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/lib/bcmail-jdk15on-159.jar" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/lib/bcpg-jdk15on-159.jar" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/lib/bcpkix-jdk15on-159.jar" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/lib/bctest-jdk15on-159.jar" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/project/target/config-classes/$412555afd9d7504bb843$.class" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/project/target/config-classes/$412555afd9d7504bb843.cache" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/project/target/config-classes/$412555afd9d7504bb843.class" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/project/target/config-classes/$76b010c24695e88de671$.class" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/project/target/config-classes/$76b010c24695e88de671.cache" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/project/target/config-classes/$76b010c24695e88de671.class" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/project/target/config-classes/$d1ea61bde9ab95075dc1$.class" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/project/target/config-classes/$d1ea61bde9ab95075dc1.cache" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/project/target/config-classes/$d1ea61bde9ab95075dc1.class" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/project/target/config-classes/$e46205f9859d8cdd7a28$.class" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/project/target/config-classes/$e46205f9859d8cdd7a28.cache" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/project/target/config-classes/$e46205f9859d8cdd7a28.class" afterPath="" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/lib/bctls-jdk15on-159.jar" afterPath="$PROJECT_DIR$/bak/bctls-jdk15on-159.jar" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/lib/jce-ext-jdk13-159.jar" afterPath="$PROJECT_DIR$/bak/jce-ext-jdk13-159.jar" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/lib/jce-jdk13-159.jar" afterPath="$PROJECT_DIR$/bak/jce-jdk13-159.jar" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/modules/scalaspvwarretbtc2.iml" afterPath="$PROJECT_DIR$/.idea/modules/scalaspvwarretbtc2.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/sbt.xml" afterPath="$PROJECT_DIR$/.idea/sbt.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.gitignore" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/build.sbt" afterPath="$PROJECT_DIR$/build.sbt" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/project/target/streams/$global/update/$global/streams/update_cache_2.12/output" afterPath="$PROJECT_DIR$/project/target/streams/$global/update/$global/streams/update_cache_2.12/output" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/project/target/streams/compile/compileIncremental/$global/streams/out" afterPath="$PROJECT_DIR$/project/target/streams/compile/compileIncremental/$global/streams/out" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/project/target/streams/compile/copyResources/$global/streams/out" afterPath="$PROJECT_DIR$/project/target/streams/compile/copyResources/$global/streams/out" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/scala/SPVWarretBTC.scala" afterPath="$PROJECT_DIR$/src/main/scala/SPVWarretBTC.scala" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
@@ -52,8 +26,8 @@
       <file leaf-file-name="SPVWarretBTC.scala" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/scala/SPVWarretBTC.scala">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="265">
-              <caret line="82" column="41" lean-forward="true" selection-start-line="82" selection-start-column="41" selection-end-line="82" selection-end-column="50" />
+            <state relative-caret-position="331">
+              <caret line="110" column="30" lean-forward="true" selection-start-line="110" selection-start-column="30" selection-end-line="110" selection-end-column="30" />
               <folding>
                 <element signature="e#0#30#0" expanded="true" />
               </folding>
@@ -72,6 +46,11 @@
         </entry>
       </file>
     </leaf>
+  </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>for</find>
+    </findStrings>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -341,8 +320,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/scala/SPVWarretBTC.scala">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="265">
-          <caret line="82" column="41" lean-forward="true" selection-start-line="82" selection-start-column="41" selection-end-line="82" selection-end-column="50" />
+        <state relative-caret-position="331">
+          <caret line="110" column="30" lean-forward="true" selection-start-line="110" selection-start-column="30" selection-end-line="110" selection-end-column="30" />
           <folding>
             <element signature="e#0#30#0" expanded="true" />
           </folding>
