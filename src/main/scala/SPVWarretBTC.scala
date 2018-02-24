@@ -1,11 +1,12 @@
 import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.IOException
-import java.lang
+import java.{lang, util}
 import java.net.Socket
 import java.security.{KeyPair, KeyPairGenerator, MessageDigest, NoSuchAlgorithmException, SecureRandom}
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.util.Arrays
 
 import scala.collection.JavaConversions._
 import java.security.spec.ECGenParameterSpec
@@ -72,6 +73,15 @@ class MessageHandler(dummy:String = "dummy") {
   var dout: DataOutputStream = new DataOutputStream(client.getOutputStream())
   val ALPHABET: Array[Char] = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz".toCharArray()
   val ENCODED_ZERO = ALPHABET(0)
+  var INDEXES: Array[Int] = new Array[Int](128)
+
+  def this(){
+    this("dummy")
+    Arrays.fill(INDEXES, -1)
+    for(i <- 0 until ALPHABET.length){
+      INDEXES(ALPHABET(i)) = i
+    }
+  }
 
   def sha256(payload: Array[Byte]): Array[Byte] = {
     val md = MessageDigest.getInstance("SHA-256")
@@ -104,29 +114,91 @@ class MessageHandler(dummy:String = "dummy") {
   }
 
 
-  def encodeBase58(buf: Array[Byte]): String = {
-    // 文字列を16進数にする
-    val s_hex = DatatypeConverter.printHexBinary(buf)
-    // 16進数 → 10進数
-    var decimal = java.lang.Long.valueOf(s_hex, 16)
-    // 10進数を58種類の文字列にする
-    val res = new StringBuffer()
-    while (decimal > 0) {
-      var c = ALPHABET(decimal.toInt % 58)
-      res.append(c)
-      decimal = decimal / 58
+  def encodeBase58(input: Array[Byte]): String = {
+    if (input.length == 0) return ""
+    // Count leading zeros.
+    var zeros = 0
+    while (zeros < input.length && input(zeros) == 0){
+      zeros += 1
     }
-    // 0byteのデータがないことを確認
-    val temp_b = buf.clone()
-    val b = new Breaks()
-    b.breakable {
-      for (i <- 0 until temp_b.length) {
-        if (temp_b(i) != 0) b.break()
-        res.append(ENCODED_ZERO)
+    // Convert base-256 digits to base-58 digits (plus conversion to ASCII characters)
+    var tmp = Arrays.copyOf(input, input.length) // since we modify it in-place
+
+    val encoded = new Array[Char](tmp.length * 2)
+    // upper bound
+    var outputStart = encoded.length
+    var inputStart:Int = zeros
+    while(inputStart < tmp.length){
+      outputStart -= 1
+      encoded(outputStart) = ALPHABET(divmod(input, inputStart, 256, 58))
+      if (input(inputStart) == 0){
+        inputStart += 1 // optimization - skip leading zeros
       }
     }
-    res.reverse.toString()
+    // Preserve exactly as many leading encoded zeros in output as there were leading zeros in input.
+    while (outputStart < encoded.length && encoded(outputStart) == ENCODED_ZERO){
+      outputStart += 1
+    }
+    zeros -= 1
+    while (zeros >= 0){
+      outputStart -= 1
+      encoded(outputStart) = ENCODED_ZERO
+    }
+    // Return encoded string (including encoded leading zeros).
+    new String(encoded, outputStart, encoded.length - outputStart)
   }
+
+  def divmod(number: Array[Byte], firstDigit: Int, base: Int, divisor: Int): Byte = {
+    var remainder = 0
+    for(i <- firstDigit until number.length) {
+      val digit = number(i).asInstanceOf[Int] & 0xFF
+      val temp = remainder * base + digit
+      number(i) = (temp / divisor).asInstanceOf[Byte]
+      remainder = temp % divisor
+    }
+    remainder.asInstanceOf[Byte]
+  }
+
+
+  def decodeBase58(input: String): Array[Byte] = {
+    if (input.length == 0) return new Array[Byte](0)
+    // Convert the base58-encoded ASCII chars to a base58 byte sequence (base58 digits).
+    val input58 = new Array[Byte](input.length)
+    for (i <- 0 until input.length) {
+      var c = input.charAt(i)
+      var digit = if (c < 128){
+        INDEXES(c)
+      } else {
+        -1
+      }
+      if (digit < 0){
+        println("Illegal character " + c + " at position " + i)
+        System.exit(0)
+      }
+      input58(i) = digit.asInstanceOf[Byte]
+    }
+
+    // Count leading zeros.
+    var zeros = 0
+    while (zeros < input58.length && input58(zeros) == 0) zeros += 1
+
+    // Convert base-58 digits to base-256 digits.
+    val decoded = new Array[Byte](input.length)
+    var outputStart = decoded.length
+    var inputStart:Int = zeros
+    while(inputStart < input58.length){
+      outputStart -= 1
+      decoded(outputStart) = divmod(input58, inputStart, 58, 256)
+      if (input58(inputStart) == 0){
+        inputStart += 1 // optimization - skip leading zeros
+      }
+    }
+    // Ignore extra leading zeroes that were added during the calculation.
+    while (outputStart < decoded.length && decoded(outputStart) == 0) outputStart += 1
+    // Return decoded data (including original number of leading zeros).
+    Arrays.copyOfRange(decoded, outputStart - zeros, decoded.length)
+  }
+
 
   def longToLittleNosin(value: Long): Long = {
     val buf = ByteBuffer.allocate(8)
