@@ -8,6 +8,7 @@ import java.nio.ByteOrder
 
 import scala.collection.JavaConversions._
 import java.security.spec.ECGenParameterSpec
+import java.security.Security
 
 class MessageHeader(
   var magic: Int = 0,
@@ -77,7 +78,8 @@ class MessageHandler(dummy:String = "dummy") {
   }
 
   def genSecKey(): KeyPair ={
-    val keyGen = KeyPairGenerator.getInstance("ECDsA", "SC")
+    Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider)
+    val keyGen = KeyPairGenerator.getInstance("ECDsA", "BC")
     val ecSpec = new ECGenParameterSpec("secp256k1")
     keyGen.initialize(ecSpec, new SecureRandom())
     keyGen.generateKeyPair()
@@ -225,8 +227,8 @@ object Main{
   def main(args: Array[String]) {
     val messageHandler = new MessageHandler()
     val kpair = messageHandler.genSecKey()
-    println(kpair.getPrivate().getEncoded())
+    //println(kpair.getPrivate().toString())
 
-    //messageHandler.withBitcoinConnection()
+    messageHandler.withBitcoinConnection()
   }
 }
