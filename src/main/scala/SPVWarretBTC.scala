@@ -246,6 +246,7 @@ class MessageHandler(dummy:String = "dummy") {
     System.arraycopy(result, 0, hashed_with_prefix, 0, hashed_with_prefix.length)
     System.arraycopy(result, hashed_with_prefix.length, checksum, 0, 4)
     return result
+    //return DatatypeConverter.parseHexBinary(encodeBase58(result))
   }
 
   def hash160(priArr: Array[Byte]): Array[Byte] = {
@@ -442,6 +443,7 @@ object Main{
     var tmp: ArrayList[Array[Byte]] = messageHandler.getKeyPairBytes()
     println(messageHandler.encodeWIF(tmp.get(0)))
     println(DatatypeConverter.printHexBinary(messageHandler.encodeBTCAddress(tmp.get(1))))
+    println(DatatypeConverter.printHexBinary(messageHandler.hash160(tmp.get(1))))
 
     //messageHandler.withBitcoinConnection()
   }
