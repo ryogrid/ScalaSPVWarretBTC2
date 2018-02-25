@@ -20,6 +20,24 @@ import javax.xml.bind.DatatypeConverter
 
 import java.security.spec.ECPublicKeySpec
 
+import org.bouncycastle.jcajce.provider.asymmetric.util.EC5Util
+import org.bouncycastle.jce.ECNamedCurveTable
+import org.bouncycastle.jce.ECPointUtil
+import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec
+import org.bouncycastle.math.ec.ECCurve
+import java.security.KeyFactory
+import java.security.NoSuchAlgorithmException
+import java.security.NoSuchProviderException
+import java.security.spec.InvalidKeySpecException
+
+import java.io.PrintWriter
+import java.io.StringWriter
+
+import org.bouncycastle.jce.ECNamedCurveTable
+import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec
+
+import java.math.BigInteger
+
 class MessageHeader(
   var magic: Int = 0,
   var commandName: Array[Byte] = new Array[Byte](12),
@@ -73,12 +91,14 @@ class TxOut(
            )
 
 class MessageHandler(dummy:String = "dummy") {
-  val client: Socket = new Socket("testnet-seed.bitcoin.jonasschnelli.ch", 18333)
-  val din: DataInputStream = new DataInputStream(client.getInputStream())
-  var dout: DataOutputStream = new DataOutputStream(client.getOutputStream())
+  val client: Socket = null//new Socket("testnet-seed.bitcoin.jonasschnelli.ch", 18333)
+  val din: DataInputStream = null//new DataInputStream(client.getInputStream())
+  var dout: DataOutputStream = null//new DataOutputStream(client.getOutputStream())
   val ALPHABET: Array[Char] = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz".toCharArray()
   val ENCODED_ZERO = ALPHABET(0)
   var INDEXES: Array[Int] = new Array[Int](128)
+  val RANDOM_NUMBER_ALGORITHM = "SHA1PRNG"
+  val RANDOM_NUMBER_ALGORITHM_PROVIDER = "SUN"
 
   def this(){
     this("dummy")
@@ -87,6 +107,42 @@ class MessageHandler(dummy:String = "dummy") {
       INDEXES(ALPHABET(i)) = i
     }
   }
+
+  def generatePrivateKey(): Array[Byte] = {
+    var secureRandom:SecureRandom = null
+    try
+      secureRandom = SecureRandom.getInstance(RANDOM_NUMBER_ALGORITHM, RANDOM_NUMBER_ALGORITHM_PROVIDER)
+    catch {
+      case e: Exception =>
+        val errors = new StringWriter()
+        e.printStackTrace(new PrintWriter(errors))
+        secureRandom = new SecureRandom()
+    }
+    var privateKeyCheck = BigInteger.ZERO
+    // Bit of magic, move this maybe. This is the max key range.
+    val maxKey = new BigInteger("00FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364140", 16)
+    // Generate the key, skipping as many as desired.
+    val privateKeyAttempt = new Array[Byte](32)
+    secureRandom.nextBytes(privateKeyAttempt)
+    privateKeyCheck = new BigInteger(1, privateKeyAttempt)
+    while ((privateKeyCheck.compareTo(BigInteger.ZERO) == 0) || (privateKeyCheck.compareTo(maxKey) == 1)) {
+      secureRandom.nextBytes(privateKeyAttempt)
+      privateKeyCheck = new BigInteger(1, privateKeyAttempt)
+    }
+    privateKeyAttempt
+  }
+
+  def generatePublicKey(privateKey: Array[Byte]): Array[Byte] = try {
+    val spec = ECNamedCurveTable.getParameterSpec("secp256k1")
+    val pointQ = spec.getG.multiply(new BigInteger(1, privateKey))
+    pointQ.getEncoded(false)
+  } catch {
+    case e: Exception =>
+      val errors = new StringWriter
+      e.printStackTrace(new PrintWriter(errors))
+      new Array[Byte](0)
+  }
+
 
   def sha256(payload: Array[Byte]): Array[Byte] = {
     val md = MessageDigest.getInstance("SHA-256")
@@ -98,20 +154,9 @@ class MessageHandler(dummy:String = "dummy") {
     sha256(sha256(payload))
   }
 
-  import org.bouncycastle.jcajce.provider.asymmetric.util.EC5Util
-  import org.bouncycastle.jce.ECNamedCurveTable
-  import org.bouncycastle.jce.ECPointUtil
-  import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec
-  import org.bouncycastle.math.ec.ECCurve
-  import java.security.KeyFactory
-  import java.security.NoSuchAlgorithmException
-  import java.security.NoSuchProviderException
-  import java.security.spec.InvalidKeySpecException
-
-
   def priToPub(priArr: Array[Byte]): Array[Byte] = {
     val params = ECNamedCurveTable.getParameterSpec("secp256k1")
-    val fact = KeyFactory.getInstance("ECDSA", "BC")
+    val fact = KeyFactory.getInstance("ECDsA", "BC")
     val curve = params.getCurve()
     val ellipticCurve = EC5Util.convertCurve(curve, params.getSeed)
     val point = ECPointUtil.decodePoint(ellipticCurve, priArr)
@@ -122,31 +167,13 @@ class MessageHandler(dummy:String = "dummy") {
   }
 
   def getKeyPairBytes(): ArrayList[Array[Byte]] = {
-    var kpair = genSecKey()
-    var prikey = kpair.getPrivate()
-
-    var priArr = KeyStrSplitAndBArr(prikey.toString())
-    var pubArr = priToPub(priArr)
+    var pri_key: Array[Byte] = generatePrivateKey()
+    var pub_key: Array[Byte] = generatePublicKey(pri_key)
     var ret: ArrayList[Array[Byte]] = new ArrayList[Array[Byte]]
-    ret.add(priArr)
-    ret.add(pubArr)
+    ret.add(pri_key)
+    ret.add(pub_key)
 
     return ret
-  }
-
-  def genSecKey(): KeyPair ={
-    Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider)
-    val keyGen = KeyPairGenerator.getInstance("ECDsA", "BC")
-    val ecSpec = new ECGenParameterSpec("secp256k1")
-    keyGen.initialize(ecSpec, new SecureRandom())
-    keyGen.generateKeyPair()
-  }
-
-  def KeyStrSplitAndBArr(keyStr: String): Array[Byte] = {
-    val splited = keyStr.split("Y: ")
-    print(splited(1))
-    val bytes: Array[Byte] = DatatypeConverter.parseHexBinary(splited(1).substring(0,64))
-    return bytes
   }
 
   def encodeWIF(buf: Array[Byte]): String = {
@@ -160,7 +187,6 @@ class MessageHandler(dummy:String = "dummy") {
 
     return encodeBase58(tmp2)
   }
-
 
   def encodeBase58(input: Array[Byte]): String = {
     if (input.length == 0) return ""
@@ -390,11 +416,10 @@ class MessageHandler(dummy:String = "dummy") {
 object Main{
   def main(args: Array[String]) {
     val messageHandler = new MessageHandler()
-    val kpair = messageHandler.genSecKey()
-    println(messageHandler.encodeWIF(kpair.getPrivate().getEncoded()))
     var tmp: ArrayList[Array[Byte]] = messageHandler.getKeyPairBytes()
+    println(DatatypeConverter.printHexBinary(tmp.get(0)))
     println(DatatypeConverter.printHexBinary(tmp.get(1)))
 
-    messageHandler.withBitcoinConnection()
+    //messageHandler.withBitcoinConnection()
   }
 }

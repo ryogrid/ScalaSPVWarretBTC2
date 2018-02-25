@@ -25,10 +25,10 @@
       <file leaf-file-name="SPVWarretBTC.scala" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/scala/SPVWarretBTC.scala">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-535">
-              <caret line="20" column="7" lean-forward="false" selection-start-line="20" selection-start-column="7" selection-end-line="20" selection-end-column="7" />
+            <state relative-caret-position="66">
+              <caret line="135" column="55" lean-forward="false" selection-start-line="135" selection-start-column="51" selection-end-line="135" selection-end-column="60" />
               <folding>
-                <element signature="e#2531#2594#0" expanded="true" />
+                <element signature="e#0#16#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -39,9 +39,11 @@
   <component name="FindInProjectRecents">
     <findStrings>
       <find>for</find>
-      <find>println</find>
       <find>getKeyPair</find>
       <find>Bytes</find>
+      <find>socket</find>
+      <find>client</find>
+      <find>println</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -357,10 +359,10 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/scala/SPVWarretBTC.scala">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-535">
-          <caret line="20" column="7" lean-forward="false" selection-start-line="20" selection-start-column="7" selection-end-line="20" selection-end-column="7" />
+        <state relative-caret-position="66">
+          <caret line="135" column="55" lean-forward="false" selection-start-line="135" selection-start-column="51" selection-end-line="135" selection-end-column="60" />
           <folding>
-            <element signature="e#2531#2594#0" expanded="true" />
+            <element signature="e#0#16#0" expanded="true" />
           </folding>
         </state>
       </provider>
