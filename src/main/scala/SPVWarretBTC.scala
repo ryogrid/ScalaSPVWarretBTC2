@@ -42,55 +42,55 @@ import org.bouncycastle.crypto.digests.RIPEMD160Digest
 import org.bouncycastle.util.encoders.Hex
 
 class MessageHeader(
-  var magic: Int = 0,
-  var commandName: Array[Byte] = new Array[Byte](12),
-  var payloadSize: Int = 0,
-  var checksum: Array[Byte] = new Array[Byte](4)
-)
+                     var magic: Int = 0,
+                     var commandName: Array[Byte] = new Array[Byte](12),
+                     var payloadSize: Int = 0,
+                     var checksum: Array[Byte] = new Array[Byte](4)
+                   )
 
 class NetAddr(
-  var services: Long = 0,
-  var ip: Array[Byte] = new Array[Byte](16),
-  var port: Short = 0
-)
+               var services: Long = 0,
+               var ip: Array[Byte] = new Array[Byte](16),
+               var port: Short = 0
+             )
 
 class Version(
-  var version: Int = 0,
-  var services: Long = 0,
-  var timestamp: Long = 0,
-  var addrRecv: NetAddr = null,
-  var addrFrom: NetAddr = null,
-  var nonce: Long = 0,
-  var userAgent: Array[Char] = null,
-  var startHeight:Int = 0,
-  var relay: Boolean = false,
-  var bytes: Int = 86
-)
+               var version: Int = 0,
+               var services: Long = 0,
+               var timestamp: Long = 0,
+               var addrRecv: NetAddr = null,
+               var addrFrom: NetAddr = null,
+               var nonce: Long = 0,
+               var userAgent: Array[Char] = null,
+               var startHeight:Int = 0,
+               var relay: Boolean = false,
+               var bytes: Int = 86
+             )
 
 class Verack(var commandName: String = "verack")
 
 class OutPoint (
-  var hash: Array[Byte] = new Array[Byte](32),
-  var index: Int = 0
+                 var hash: Array[Byte] = new Array[Byte](32),
+                 var index: Int = 0
                )
 
 class TxIn (
-  var previousOutput: OutPoint = null,
-  var signatureScript: StringBuffer = null,
-  var sequence: Int = 0
+             var previousOutput: OutPoint = null,
+             var signatureScript: StringBuffer = null,
+             var sequence: Int = 0
            )
 
 class Tx(
-  var version: Int = 0,
-  var txIn: Array[TxIn] = null,
-  var txOut: Array[TxOut] = null,
-  var locktime: Int = 0,
-  var commandName: String = "tx"
+          var version: Int = 0,
+          var txIn: Array[TxIn] = null,
+          var txOut: Array[TxOut] = null,
+          var locktime: Int = 0,
+          var commandName: String = "tx"
         )
 
 class TxOut(
-  var value: Long = 0,
-  var pkScript: StringBuffer = null
+             var value: Long = 0,
+             var pkScript: StringBuffer = null
            )
 
 class MessageHandler(dummy:String = "dummy") {
@@ -162,32 +162,32 @@ class MessageHandler(dummy:String = "dummy") {
     return Arrays.copyOfRange(decoded, 1, decoded.length - 4)
   }
 
-    def encodeBTCAddress(pubArr: Array[Byte]) : Array[Byte] ={
-      var prefix: Array[Byte] = Array(0x04)
-      var pub_with_prefix: Array[Byte] = new Array[Byte](pubArr.length + 1)
-      System.arraycopy(pub_with_prefix, 0, prefix, 0, 1)
-      System.arraycopy(pub_with_prefix, 1, pubArr, 0, pubArr.length)
-      var hashed: Array[Byte] = hash160(pub_with_prefix)
-      val hashed_with_prefix: Array[Byte] = new Array[Byte](hashed.length + 1)
-      val prefix2: Array[Byte]  = Array(0x6f)
-      System.arraycopy(hashed_with_prefix, 0, prefix2, 0, 1)
-      System.arraycopy(hashed_with_prefix, 1, hashed, 0, hashed.length)
-      val checksum: Array[Byte] = hash256(hashed_with_prefix)
-      val result: Array[Byte] = new Array[Byte](hashed_with_prefix.length + 4)
-      System.arraycopy(result, 0, hashed_with_prefix, 0, hashed_with_prefix.length)
-      System.arraycopy(result, hashed_with_prefix.length, checksum, 0, 4)
-      return result
-      }
+  def encodeBTCAddress(pubArr: Array[Byte]) : Array[Byte] ={
+    var prefix: Array[Byte] = Array(0x04)
+    var pub_with_prefix: Array[Byte] = new Array[Byte](pubArr.length + 1)
+    System.arraycopy(pub_with_prefix, 0, prefix, 0, 1)
+    System.arraycopy(pub_with_prefix, 1, pubArr, 0, pubArr.length)
+    var hashed: Array[Byte] = hash160(pub_with_prefix)
+    val hashed_with_prefix: Array[Byte] = new Array[Byte](hashed.length + 1)
+    val prefix2: Array[Byte]  = Array(0x6f)
+    System.arraycopy(hashed_with_prefix, 0, prefix2, 0, 1)
+    System.arraycopy(hashed_with_prefix, 1, hashed, 0, hashed.length)
+    val checksum: Array[Byte] = hash256(hashed_with_prefix)
+    val result: Array[Byte] = new Array[Byte](hashed_with_prefix.length + 4)
+    System.arraycopy(result, 0, hashed_with_prefix, 0, hashed_with_prefix.length)
+    System.arraycopy(result, hashed_with_prefix.length, checksum, 0, 4)
+    return result
+  }
 
-     def hash160(priArr: Array[Byte]): Array[Byte] = {
-       val r: Array[Byte] = sha256(priArr)
-       val d: RIPEMD160Digest = new RIPEMD160Digest()
-       d.update(r, 0, r.length)
-       val o: Array[Byte] = new Array[Byte](d.getDigestSize)
-       d.doFinal(o, 0)
+  def hash160(priArr: Array[Byte]): Array[Byte] = {
+    val r: Array[Byte] = sha256(priArr)
+    val d: RIPEMD160Digest = new RIPEMD160Digest()
+    d.update(r, 0, r.length)
+    val o: Array[Byte] = new Array[Byte](d.getDigestSize)
+    d.doFinal(o, 0)
 
-       return o
-     }
+    return o
+  }
 
   def priToPub(priArr: Array[Byte]): Array[Byte] = {
     val params = ECNamedCurveTable.getParameterSpec("secp256k1")
@@ -452,6 +452,9 @@ object Main{
   def main(args: Array[String]) {
     val messageHandler = new MessageHandler()
     var tmp: ArrayList[Array[Byte]] = messageHandler.getKeyPairBytes()
+// this two colls break key geeration functionality...
+//    println(messageHandler.encodeWIF(tmp.get(0)))
+//    println(DatatypeConverter.printHexBinary(messageHandler.encodeBTCAddress(tmp.get(1))))
     println(DatatypeConverter.printHexBinary(tmp.get(0)))
     println(DatatypeConverter.printHexBinary(tmp.get(1)))
 
