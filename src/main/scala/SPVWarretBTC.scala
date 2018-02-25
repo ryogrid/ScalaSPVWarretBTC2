@@ -1,12 +1,13 @@
-import java.io.DataInputStream
-import java.io.DataOutputStream
-import java.io.IOException
+import java.io._
 import java.{lang, util}
 import java.net.Socket
-import java.security.{KeyPair, KeyPairGenerator, MessageDigest, NoSuchAlgorithmException, SecureRandom}
+import java.security._
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.Arrays
+import java.util.ArrayList
+
+import org.bouncycastle.util.io.pem.PemWriter
 
 import scala.collection.JavaConversions._
 import java.security.spec.ECGenParameterSpec
@@ -14,6 +15,7 @@ import java.security.Security
 import javax.xml.bind.DatatypeConverter
 
 import scala.util.control.Breaks
+import javax.xml.bind.DatatypeConverter
 
 class MessageHeader(
   var magic: Int = 0,
@@ -93,6 +95,18 @@ class MessageHandler(dummy:String = "dummy") {
     sha256(sha256(payload))
   }
 
+  def getKeyPairBytes(): ArrayList[Array[Byte]] = {
+    var kpair = genSecKey()
+    var prikey: PrivateKey = kpair.getPrivate()
+    var pubkey: PublicKey = kpair.getPublic()
+
+    var alist:ArrayList[Array[Byte]] = new ArrayList[Array[Byte]]()
+    alist.add(KeyStrSplitAndBArr(prikey.toString()))
+    alist.add(KeyStrSplitAndBArr(pubkey.toString()))
+
+    return alist
+  }
+
   def genSecKey(): KeyPair ={
     Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider)
     val keyGen = KeyPairGenerator.getInstance("ECDsA", "BC")
@@ -101,14 +115,20 @@ class MessageHandler(dummy:String = "dummy") {
     keyGen.generateKeyPair()
   }
 
+  def KeyStrSplitAndBArr(keyStr: String): Array[Byte] = {
+    val splited = keyStr.split("Y: ")
+    val bytes: Array[Byte] = DatatypeConverter.parseHexBinary(splited(1).substring(0,64))
+    return bytes
+  }
+
   def encodeWIF(buf: Array[Byte]): String = {
     var tmp = new Array[Byte](buf.length + 1)
     tmp(0) = Integer.parseUnsignedInt(String.valueOf(0xEF)).asInstanceOf[Byte]
     System.arraycopy(tmp, 1, buf, 0, buf.length)
     var hashed = hash256(tmp)
-    var tmp2 = new Array[Byte](tmp.length + 4)
-    System.arraycopy(tmp2, 0, tmp, 0, tmp.length)
-    System.arraycopy(tmp2, tmp.length, hashed, 0, 4)
+    var tmp2 = new Array[Byte](buf.length + 4)
+    System.arraycopy(tmp2, 0, buf, 0, buf.length)
+    System.arraycopy(tmp2, buf.length, hashed, 0, 4)
 
     return encodeBase58(tmp2)
   }
@@ -143,6 +163,7 @@ class MessageHandler(dummy:String = "dummy") {
     while (zeros >= 0){
       outputStart -= 1
       encoded(outputStart) = ENCODED_ZERO
+      zeros -= 1
     }
     // Return encoded string (including encoded leading zeros).
     new String(encoded, outputStart, encoded.length - outputStart)
@@ -151,8 +172,8 @@ class MessageHandler(dummy:String = "dummy") {
   def divmod(number: Array[Byte], firstDigit: Int, base: Int, divisor: Int): Byte = {
     var remainder = 0
     for(i <- firstDigit until number.length) {
-      val digit = number(i).asInstanceOf[Int] & 0xFF
-      val temp = remainder * base + digit
+      var digit = number(i).asInstanceOf[Int] & 0xFF
+      var temp = remainder * base + digit
       number(i) = (temp / divisor).asInstanceOf[Byte]
       remainder = temp % divisor
     }
@@ -342,7 +363,9 @@ object Main{
   def main(args: Array[String]) {
     val messageHandler = new MessageHandler()
     val kpair = messageHandler.genSecKey()
-    println(messageHandler.encodeBase58(kpair.getPrivate().getEncoded()))
+    println(messageHandler.encodeWIF(kpair.getPrivate().getEncoded()))
+    messageHandler.getKeyPairBytes()
+
 
     messageHandler.withBitcoinConnection()
   }
