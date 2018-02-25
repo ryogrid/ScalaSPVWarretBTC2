@@ -12,10 +12,13 @@ import org.bouncycastle.util.io.pem.PemWriter
 import scala.collection.JavaConversions._
 import java.security.spec.ECGenParameterSpec
 import java.security.Security
+import java.security.interfaces.ECPublicKey
 import javax.xml.bind.DatatypeConverter
 
 import scala.util.control.Breaks
 import javax.xml.bind.DatatypeConverter
+
+import java.security.spec.ECPublicKeySpec
 
 class MessageHeader(
   var magic: Int = 0,
@@ -95,16 +98,40 @@ class MessageHandler(dummy:String = "dummy") {
     sha256(sha256(payload))
   }
 
+  import org.bouncycastle.jcajce.provider.asymmetric.util.EC5Util
+  import org.bouncycastle.jce.ECNamedCurveTable
+  import org.bouncycastle.jce.ECPointUtil
+  import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec
+  import org.bouncycastle.math.ec.ECCurve
+  import java.security.KeyFactory
+  import java.security.NoSuchAlgorithmException
+  import java.security.NoSuchProviderException
+  import java.security.spec.InvalidKeySpecException
+
+
+  def priToPub(priArr: Array[Byte]): Array[Byte] = {
+    val params = ECNamedCurveTable.getParameterSpec("secp256k1")
+    val fact = KeyFactory.getInstance("ECDSA", "BC")
+    val curve = params.getCurve()
+    val ellipticCurve = EC5Util.convertCurve(curve, params.getSeed)
+    val point = ECPointUtil.decodePoint(ellipticCurve, priArr)
+    val params2 = EC5Util.convertSpec(ellipticCurve, params)
+    val keySpec = new ECPublicKeySpec(point, params2)
+    var ret: ECPublicKey = fact.generatePublic(keySpec).asInstanceOf[ECPublicKey]
+    ret.getEncoded()
+  }
+
   def getKeyPairBytes(): ArrayList[Array[Byte]] = {
     var kpair = genSecKey()
-    var prikey: PrivateKey = kpair.getPrivate()
-    var pubkey: PublicKey = kpair.getPublic()
+    var prikey = kpair.getPrivate()
 
-    var alist:ArrayList[Array[Byte]] = new ArrayList[Array[Byte]]()
-    alist.add(KeyStrSplitAndBArr(prikey.toString()))
-    alist.add(KeyStrSplitAndBArr(pubkey.toString()))
+    var priArr = KeyStrSplitAndBArr(prikey.toString())
+    var pubArr = priToPub(priArr)
+    var ret: ArrayList[Array[Byte]] = new ArrayList[Array[Byte]]
+    ret.add(priArr)
+    ret.add(pubArr)
 
-    return alist
+    return ret
   }
 
   def genSecKey(): KeyPair ={
@@ -117,6 +144,7 @@ class MessageHandler(dummy:String = "dummy") {
 
   def KeyStrSplitAndBArr(keyStr: String): Array[Byte] = {
     val splited = keyStr.split("Y: ")
+    print(splited(1))
     val bytes: Array[Byte] = DatatypeConverter.parseHexBinary(splited(1).substring(0,64))
     return bytes
   }
@@ -364,8 +392,8 @@ object Main{
     val messageHandler = new MessageHandler()
     val kpair = messageHandler.genSecKey()
     println(messageHandler.encodeWIF(kpair.getPrivate().getEncoded()))
-    messageHandler.getKeyPairBytes()
-
+    var tmp: ArrayList[Array[Byte]] = messageHandler.getKeyPairBytes()
+    println(DatatypeConverter.printHexBinary(tmp.get(1)))
 
     messageHandler.withBitcoinConnection()
   }
