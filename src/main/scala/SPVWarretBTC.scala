@@ -38,6 +38,10 @@ import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec
 
 import java.math.BigInteger
 
+import org.bouncycastle.crypto.digests.RIPEMD160Digest
+import org.bouncycastle.util.encoders.Hex
+
+
 class MessageHeader(
   var magic: Int = 0,
   var commandName: Array[Byte] = new Array[Byte](12),
@@ -154,18 +158,6 @@ class MessageHandler(dummy:String = "dummy") {
     sha256(sha256(payload))
   }
 
-  def priToPub(priArr: Array[Byte]): Array[Byte] = {
-    val params = ECNamedCurveTable.getParameterSpec("secp256k1")
-    val fact = KeyFactory.getInstance("ECDsA", "BC")
-    val curve = params.getCurve()
-    val ellipticCurve = EC5Util.convertCurve(curve, params.getSeed)
-    val point = ECPointUtil.decodePoint(ellipticCurve, priArr)
-    val params2 = EC5Util.convertSpec(ellipticCurve, params)
-    val keySpec = new ECPublicKeySpec(point, params2)
-    var ret: ECPublicKey = fact.generatePublic(keySpec).asInstanceOf[ECPublicKey]
-    ret.getEncoded()
-  }
-
   def getKeyPairBytes(): ArrayList[Array[Byte]] = {
     var pri_key: Array[Byte] = generatePrivateKey()
     var pub_key: Array[Byte] = generatePublicKey(pri_key)
@@ -186,6 +178,11 @@ class MessageHandler(dummy:String = "dummy") {
     System.arraycopy(tmp2, buf.length, hashed, 0, 4)
 
     return encodeBase58(tmp2)
+  }
+
+  def decodeWIF(str: String): Array[Byte] ={
+    var decoded : Array[Byte] = decodeBase58(str)
+    return Arrays.copyOfRange(decoded, 1, decoded.length - 4)
   }
 
   def encodeBase58(input: Array[Byte]): String = {
@@ -234,6 +231,32 @@ class MessageHandler(dummy:String = "dummy") {
     remainder.asInstanceOf[Byte]
   }
 
+  def encodeBTCAddress(pubArr: Array[Byte]) : Array[Byte] ={
+    var prefix: Array[Byte] = Array(0x04)
+    var pub_with_prefix: Array[Byte] = new Array[Byte](pubArr.length + 1)
+    System.arraycopy(pub_with_prefix, 0, prefix, 0, 1)
+    System.arraycopy(pub_with_prefix, 1, pubArr, 0, pubArr.length)
+    var hashed: Array[Byte] = hash160(pub_with_prefix)
+    val hashed_with_prefix: Array[Byte] = new Array[Byte](hashed.length + 1)
+    val prefix2: Array[Byte]  = Array(0x6f)
+    System.arraycopy(hashed_with_prefix, 0, prefix2, 0, 1)
+    System.arraycopy(hashed_with_prefix, 1, hashed, 0, hashed.length)
+    val checksum: Array[Byte] = hash256(hashed_with_prefix)
+    val result: Array[Byte] = new Array[Byte](hashed_with_prefix.length + 4)
+    System.arraycopy(result, 0, hashed_with_prefix, 0, hashed_with_prefix.length)
+    System.arraycopy(result, hashed_with_prefix.length, checksum, 0, 4)
+    return result
+  }
+
+  def hash160(priArr: Array[Byte]): Array[Byte] = {
+    val r: Array[Byte] = sha256(priArr)
+    val d: RIPEMD160Digest = new RIPEMD160Digest()
+    d.update(r, 0, r.length)
+    val o: Array[Byte] = new Array[Byte](d.getDigestSize)
+    d.doFinal(o, 0)
+
+    return o
+  }
 
   def decodeBase58(input: String): Array[Byte] = {
     if (input.length == 0) return new Array[Byte](0)
@@ -417,8 +440,8 @@ object Main{
   def main(args: Array[String]) {
     val messageHandler = new MessageHandler()
     var tmp: ArrayList[Array[Byte]] = messageHandler.getKeyPairBytes()
-    println(DatatypeConverter.printHexBinary(tmp.get(0)))
-    println(DatatypeConverter.printHexBinary(tmp.get(1)))
+    println(messageHandler.encodeWIF(tmp.get(0)))
+    println(DatatypeConverter.printHexBinary(messageHandler.encodeBTCAddress(tmp.get(1))))
 
     //messageHandler.withBitcoinConnection()
   }
