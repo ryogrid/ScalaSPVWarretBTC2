@@ -106,6 +106,7 @@ class MessageHandler(dummy:String = "dummy") {
 
   def this(){
     this("dummy")
+    Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider())
     Arrays.fill(INDEXES, -1)
     for(i <- 0 until ALPHABET.length){
       INDEXES(ALPHABET(i)) = i
@@ -114,9 +115,9 @@ class MessageHandler(dummy:String = "dummy") {
 
   def generatePrivateKey(): Array[Byte] = {
     var secureRandom:SecureRandom = null
-    try
+    try {
       secureRandom = SecureRandom.getInstance(RANDOM_NUMBER_ALGORITHM, RANDOM_NUMBER_ALGORITHM_PROVIDER)
-    catch {
+    }catch {
       case e: Exception =>
         val errors = new StringWriter()
         e.printStackTrace(new PrintWriter(errors))
@@ -136,15 +137,17 @@ class MessageHandler(dummy:String = "dummy") {
     privateKeyAttempt
   }
 
-  def generatePublicKey(privateKey: Array[Byte]): Array[Byte] = try {
-    val spec = ECNamedCurveTable.getParameterSpec("secp256k1")
-    val pointQ = spec.getG.multiply(new BigInteger(1, privateKey))
-    pointQ.getEncoded(false)
-  } catch {
-    case e: Exception =>
-      val errors = new StringWriter
-      e.printStackTrace(new PrintWriter(errors))
-      new Array[Byte](0)
+  def generatePublicKey(privateKey: Array[Byte]): Array[Byte] =  {
+    try{
+      val spec = ECNamedCurveTable.getParameterSpec("secp256k1")
+      val pointQ = spec.getG.multiply(new BigInteger(1, privateKey))
+      return pointQ.getEncoded(false)
+    } catch {
+      case e: Exception =>
+        val errors = new StringWriter()
+        e.printStackTrace(new PrintWriter(errors))
+        new Array[Byte](0)
+    }
   }
 
 
@@ -444,6 +447,8 @@ object Main{
     println(messageHandler.encodeWIF(tmp.get(0)))
     println(DatatypeConverter.printHexBinary(messageHandler.encodeBTCAddress(tmp.get(1))))
     println(DatatypeConverter.printHexBinary(messageHandler.hash160(tmp.get(1))))
+    println(DatatypeConverter.printHexBinary(tmp.get(0)))
+    println(DatatypeConverter.printHexBinary(tmp.get(1)))
 
     //messageHandler.withBitcoinConnection()
   }
