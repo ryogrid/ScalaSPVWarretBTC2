@@ -455,6 +455,7 @@ object Main{
 // this two colls break key geeration functionality...
     println(messageHandler.encodeWIF(tmp.get(0)))
     //BUG: アドレスがmから始まっていない(最初の0x04付与しなくてもダメだった)
+    //BUG: WIFの秘密鍵とビットコインアドレスの長さが同じなのはおかしい
     println(DatatypeConverter.printHexBinary(messageHandler.encodeBTCAddress(tmp.get(1))))
     println(DatatypeConverter.printHexBinary(tmp.get(0)))
     println(DatatypeConverter.printHexBinary(tmp.get(1)))
