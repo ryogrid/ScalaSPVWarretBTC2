@@ -165,17 +165,17 @@ class MessageHandler(dummy:String = "dummy") {
   def encodeBTCAddress(pubArr: Array[Byte]) : Array[Byte] ={
     var prefix: Array[Byte] = Array(0x04)
     var pub_with_prefix: Array[Byte] = new Array[Byte](pubArr.length + 1)
-    System.arraycopy(pub_with_prefix, 0, prefix, 0, 1)
-    System.arraycopy(pub_with_prefix, 1, pubArr, 0, pubArr.length)
+    System.arraycopy(prefix, 0, pub_with_prefix, 0, 1)
+    System.arraycopy(pubArr, 0, pub_with_prefix, 1, pubArr.length)
     var hashed: Array[Byte] = hash160(pub_with_prefix)
     val hashed_with_prefix: Array[Byte] = new Array[Byte](hashed.length + 1)
     val prefix2: Array[Byte]  = Array(0x6f)
-    System.arraycopy(hashed_with_prefix, 0, prefix2, 0, 1)
-    System.arraycopy(hashed_with_prefix, 1, hashed, 0, hashed.length)
+    System.arraycopy(prefix2, 0, hashed_with_prefix, 0, 1)
+    System.arraycopy(hashed, 0, hashed_with_prefix, 1, hashed.length)
     val checksum: Array[Byte] = hash256(hashed_with_prefix)
     val result: Array[Byte] = new Array[Byte](hashed_with_prefix.length + 4)
-    System.arraycopy(result, 0, hashed_with_prefix, 0, hashed_with_prefix.length)
-    System.arraycopy(result, hashed_with_prefix.length, checksum, 0, 4)
+    System.arraycopy(hashed_with_prefix, 0, result, 0, hashed_with_prefix.length)
+    System.arraycopy(checksum, 0, result, hashed_with_prefix.length, 4)
     return result
   }
 
@@ -214,11 +214,11 @@ class MessageHandler(dummy:String = "dummy") {
   def encodeWIF(buf: Array[Byte]): String = {
     var tmp = new Array[Byte](buf.length + 1)
     tmp(0) = Integer.parseUnsignedInt(String.valueOf(0xEF)).asInstanceOf[Byte]
-    System.arraycopy(tmp, 1, buf, 0, buf.length)
+    System.arraycopy(buf, 0, tmp, 1, buf.length)
     var hashed = hash256(tmp)
     var tmp2 = new Array[Byte](buf.length + 4)
-    System.arraycopy(tmp2, 0, buf, 0, buf.length)
-    System.arraycopy(tmp2, buf.length, hashed, 0, 4)
+    System.arraycopy(buf, 0, tmp2, 0, buf.length)
+    System.arraycopy(hashed, 0, tmp2, buf.length, 4)
 
     return encodeBase58(tmp2)
   }
@@ -453,8 +453,8 @@ object Main{
     val messageHandler = new MessageHandler()
     var tmp: ArrayList[Array[Byte]] = messageHandler.getKeyPairBytes()
 // this two colls break key geeration functionality...
-//    println(messageHandler.encodeWIF(tmp.get(0)))
-//    println(DatatypeConverter.printHexBinary(messageHandler.encodeBTCAddress(tmp.get(1))))
+    println(messageHandler.encodeWIF(tmp.get(0)))
+    println(DatatypeConverter.printHexBinary(messageHandler.encodeBTCAddress(tmp.get(1))))
     println(DatatypeConverter.printHexBinary(tmp.get(0)))
     println(DatatypeConverter.printHexBinary(tmp.get(1)))
 
