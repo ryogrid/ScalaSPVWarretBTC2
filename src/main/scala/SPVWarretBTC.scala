@@ -41,6 +41,8 @@ import java.math.BigInteger
 import org.bouncycastle.crypto.digests.RIPEMD160Digest
 import org.bouncycastle.util.encoders.Hex
 
+import scala.io.Source
+
 class MessageHeader(
                      var magic: Int = 0,
                      var commandName: Array[Byte] = new Array[Byte](12),
@@ -102,6 +104,10 @@ class MessageHandler(dummy:String = "dummy") {
   var INDEXES: Array[Int] = new Array[Int](128)
   val RANDOM_NUMBER_ALGORITHM = "SHA1PRNG"
   val RANDOM_NUMBER_ALGORITHM_PROVIDER = "SUN"
+  val PRIVATE_PATH = "./privateWIF.key"
+  val PUBLIC_PATH = "./publicBTCAddress.key"
+  var PRIVATE_KEY_WIF : String = null
+  var PUBLIC_BTC_ADDRESS : String = null
 
   def this(){
     this("dummy")
@@ -109,6 +115,45 @@ class MessageHandler(dummy:String = "dummy") {
     for(i <- 0 until ALPHABET.length){
       INDEXES(ALPHABET(i)) = i
     }
+  }
+
+  def storedKeyCheck() = {
+    // ファイルがあれば読み込み、保存されてなければ新たに生成して保存
+    if(checkFile(PRIVATE_PATH)){
+      PRIVATE_KEY_WIF = readFromFile(PRIVATE_PATH)
+      PUBLIC_BTC_ADDRESS = readFromFile(PUBLIC_PATH)
+      println("keys stored:")
+    }else{
+      var pairs: ArrayList[Array[Byte]] = getKeyPairBytes()
+      PRIVATE_KEY_WIF = encodeWIF(pairs.get(0))
+      PUBLIC_BTC_ADDRESS = encodeBTCAddress((pairs.get(1)))
+      saveTofFile(PRIVATE_PATH, PRIVATE_KEY_WIF)
+      saveTofFile(PUBLIC_PATH, PUBLIC_BTC_ADDRESS)
+      println("keys generated:")
+    }
+    println("private:" + PRIVATE_KEY_WIF)
+    println("public:" + PUBLIC_BTC_ADDRESS)
+  }
+
+  def readFromFile(path: String): String = {
+    var source = Source.fromFile(path)
+    val lines = source.getLines
+    return lines.next()
+  }
+
+  def checkFile(filePath: String): Boolean = {
+    val file = new File(filePath)
+    if (file.exists()) {
+      return true
+    } else {
+      return false
+    }
+  }
+
+  def saveTofFile(path:String, str:String) = {
+    val file = new PrintWriter(path)
+    file.write(str)
+    file.close()
   }
 
   def generatePrivateKey(): Array[Byte] = {
@@ -162,7 +207,7 @@ class MessageHandler(dummy:String = "dummy") {
     return Arrays.copyOfRange(decoded, 1, decoded.length - 4)
   }
 
-  def encodeBTCAddress(pubArr: Array[Byte]) : Array[Byte] ={
+  def encodeBTCAddress(pubArr: Array[Byte]) : String ={
 //    var prefix: Array[Byte] = Array(0x04)
 //    var pub_with_prefix: Array[Byte] = new Array[Byte](pubArr.length + 1)
 //    System.arraycopy(prefix, 0, pub_with_prefix, 0, 1)
@@ -178,7 +223,7 @@ class MessageHandler(dummy:String = "dummy") {
     val result: Array[Byte] = new Array[Byte](hashed_with_prefix.length + 4)
     System.arraycopy(hashed_with_prefix, 0, result, 0, hashed_with_prefix.length)
     System.arraycopy(checksum, 0, result, hashed_with_prefix.length, 4)
-    return result
+    return encodeBase58(result)
   }
 
   def hash160(pubArr: Array[Byte]): Array[Byte] = {
@@ -453,13 +498,12 @@ class MessageHandler(dummy:String = "dummy") {
 object Main{
   def main(args: Array[String]) {
     val messageHandler = new MessageHandler()
-    var tmp: ArrayList[Array[Byte]] = messageHandler.getKeyPairBytes()
-// this two colls break key geeration functionality...
-    println(messageHandler.encodeWIF(tmp.get(0)))
-    //BUG: WIFの秘密鍵とビットコインアドレスの長さが同じなのはおかしい
-    println(messageHandler.encodeBase58(messageHandler.encodeBTCAddress(tmp.get(1))))
-    println(DatatypeConverter.printHexBinary(tmp.get(0)))
-    println(DatatypeConverter.printHexBinary(tmp.get(1)))
+    messageHandler.storedKeyCheck()
+//    var tmp: ArrayList[Array[Byte]] = messageHandler.getKeyPairBytes()
+//    println(messageHandler.encodeWIF(tmp.get(0)))
+//    println(messageHandler.encodeBTCAddress(tmp.get(1)))
+//    println(DatatypeConverter.printHexBinary(tmp.get(0)))
+//    println(DatatypeConverter.printHexBinary(tmp.get(1)))
 
     //messageHandler.withBitcoinConnection()
   }
