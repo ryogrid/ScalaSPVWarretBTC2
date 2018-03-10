@@ -25,8 +25,8 @@
       <file leaf-file-name="SPVWarretBTC.scala" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/scala/SPVWarretBTC.scala">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="213">
-              <caret line="457" column="42" lean-forward="false" selection-start-line="457" selection-start-column="42" selection-end-line="457" selection-end-column="42" />
+            <state relative-caret-position="288">
+              <caret line="464" column="3" lean-forward="true" selection-start-line="464" selection-start-column="3" selection-end-line="464" selection-end-column="3" />
               <folding>
                 <element signature="e#0#16#0" expanded="true" />
               </folding>
@@ -366,8 +366,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/scala/SPVWarretBTC.scala">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="213">
-          <caret line="457" column="42" lean-forward="false" selection-start-line="457" selection-start-column="42" selection-end-line="457" selection-end-column="42" />
+        <state relative-caret-position="288">
+          <caret line="464" column="3" lean-forward="true" selection-start-line="464" selection-start-column="3" selection-end-line="464" selection-end-column="3" />
           <folding>
             <element signature="e#0#16#0" expanded="true" />
           </folding>

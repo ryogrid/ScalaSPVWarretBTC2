@@ -163,11 +163,13 @@ class MessageHandler(dummy:String = "dummy") {
   }
 
   def encodeBTCAddress(pubArr: Array[Byte]) : Array[Byte] ={
-    var prefix: Array[Byte] = Array(0x04)
-    var pub_with_prefix: Array[Byte] = new Array[Byte](pubArr.length + 1)
-    System.arraycopy(prefix, 0, pub_with_prefix, 0, 1)
-    System.arraycopy(pubArr, 0, pub_with_prefix, 1, pubArr.length)
-    var hashed: Array[Byte] = hash160(pub_with_prefix)
+//    var prefix: Array[Byte] = Array(0x04)
+//    var pub_with_prefix: Array[Byte] = new Array[Byte](pubArr.length + 1)
+//    System.arraycopy(prefix, 0, pub_with_prefix, 0, 1)
+//    System.arraycopy(pubArr, 0, pub_with_prefix, 1, pubArr.length)
+//    var hashed: Array[Byte] = hash160(pub_with_prefix)
+
+    var hashed: Array[Byte] = hash160(pubArr)
     val hashed_with_prefix: Array[Byte] = new Array[Byte](hashed.length + 1)
     val prefix2: Array[Byte]  = Array(0x6f)
     System.arraycopy(prefix2, 0, hashed_with_prefix, 0, 1)
@@ -179,8 +181,8 @@ class MessageHandler(dummy:String = "dummy") {
     return result
   }
 
-  def hash160(priArr: Array[Byte]): Array[Byte] = {
-    val r: Array[Byte] = sha256(priArr)
+  def hash160(pubArr: Array[Byte]): Array[Byte] = {
+    val r: Array[Byte] = sha256(pubArr)
     val d: RIPEMD160Digest = new RIPEMD160Digest()
     d.update(r, 0, r.length)
     val o: Array[Byte] = new Array[Byte](d.getDigestSize)
@@ -454,9 +456,8 @@ object Main{
     var tmp: ArrayList[Array[Byte]] = messageHandler.getKeyPairBytes()
 // this two colls break key geeration functionality...
     println(messageHandler.encodeWIF(tmp.get(0)))
-    //BUG: アドレスがmから始まっていない(最初の0x04付与しなくてもダメだった)
     //BUG: WIFの秘密鍵とビットコインアドレスの長さが同じなのはおかしい
-    println(DatatypeConverter.printHexBinary(messageHandler.encodeBTCAddress(tmp.get(1))))
+    println(messageHandler.encodeBase58(messageHandler.encodeBTCAddress(tmp.get(1))))
     println(DatatypeConverter.printHexBinary(tmp.get(0)))
     println(DatatypeConverter.printHexBinary(tmp.get(1)))
 
