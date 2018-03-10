@@ -95,6 +95,23 @@ class TxOut(
              var pkScript: StringBuffer = null
            )
 
+class Inv(
+           var varlist: Array[Byte] = null,
+           var inventory: Array[Inventory] = null
+         )
+
+class Inventory(
+               var invType: int = 0,
+               var hash: Array[Byte] = new Array[Byte](32)
+               )
+
+class GetData(
+               var varlist: Array[Byte] = null,
+               var inventory: Array[Inventory] = null,
+               var commandName: String = "getdata"
+             )
+
+
 class MessageHandler(dummy:String = "dummy") {
   val client: Socket = null//new Socket("testnet-seed.bitcoin.jonasschnelli.ch", 18333)
   val din: DataInputStream = null//new DataInputStream(client.getInputStream())
@@ -108,6 +125,18 @@ class MessageHandler(dummy:String = "dummy") {
   val PUBLIC_PATH = "./publicBTCAddress.key"
   var PRIVATE_KEY_WIF : String = null
   var PUBLIC_BTC_ADDRESS : String = null
+
+  val OP_DUP         = 0x76
+  val OP_EQUAL       = 0x87
+  val OP_EQUALVERIFY = 0x88
+  val OP_HASH160     = 0xA9
+  val OP_CHECKSIG    = 0xAC
+
+  val INV_ERROR              = 0
+  val INV_MSG_TX             = 1
+  val INV_MSG_BLOCK          = 2
+  val INV_MSG_FILTERED_BLOCK = 3
+  val INV_MSG_CMPCT_BLOCK    = 4
 
   def this(){
     this("dummy")
@@ -466,6 +495,22 @@ class MessageHandler(dummy:String = "dummy") {
     header.checksum(3) = shortToLittleNosin(0xe2).asInstanceOf[Byte]
 
     writeHeader(header)
+  }
+
+  def writeTx() = {
+
+  }
+
+  def writeTxIn() = {
+
+  }
+
+  def writeTxOut() = {
+
+  }
+
+  def sendBTCToTestnetFaucet(): Unit = {
+
   }
 
   def withBitcoinConnection(): Unit = {
