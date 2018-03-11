@@ -89,7 +89,7 @@ class OutPoint(
 
 class TxIn(
             var previousOutput: OutPoint = null,
-            var signatureScript: StringBuffer = null,
+            var signatureScript: Array[Byte] = null,
             var sequence: Int = 0
           )
 
@@ -528,14 +528,14 @@ class MessageHandler(dummy: String = "dummy") {
 
   def encodeInconmpTx(tx: Tx): Array[Byte] = {
     var buf: ByteBuffer = ByteBuffer.allocate(106)
-    buf.put(intToLittleNosin(tx.version)) //4
+    buf.putInt(intToLittleNosin(tx.version)) //4
     buf.put(tx.txIn(0).previousOutput.hash) //32 fixed
-    buf.put(intToLittleNosin(tx.txIn(0).previousOutput.index)) //4
-    buf.put(longToLittleNosin(tx.txOut(0).value)) //8
+    buf.putInt(intToLittleNosin(tx.txIn(0).previousOutput.index)) //4
+    buf.putLong(longToLittleNosin(tx.txOut(0).value)) //8
     buf.put(tx.txOut(0).pkScript.array()) //24
-    buf.put(longToLittleNosin(tx.txOut(1).value)) //8
+    buf.putLong(longToLittleNosin(tx.txOut(1).value)) //8
     buf.put(tx.txOut(1).pkScript.array()) //22
-    buf.put(intToLittleNosin(tx.locktime)) //4
+    buf.putInt(intToLittleNosin(tx.locktime)) //4
     return buf.array()
   }
 
@@ -544,11 +544,11 @@ class MessageHandler(dummy: String = "dummy") {
     tx.version = 1
     tx.locktime = 0x00
 
-    var outpoint: Outpoint = new OutPoint()
+    var outpoint: OutPoint = new OutPoint()
     outpoint.hash = DatatypeConverter.parseHexBinary("1b320ad6e1fd8a2caa5d832d4c8ff5bd72f750f1715a718d3983a366b093a4aa")
 
     //リバースする
-    var tmpList: java.util.List = Arrays.asList(outpoint.hash)
+    var tmpList: java.util.List[Byte] = Arrays.asList(outpoint.hash)
     Collections.reverse(tmpList)
     outpoint.hash = tmpList.toArray(new Array[Byte](outpoint.hash.length))
 
@@ -560,12 +560,12 @@ class MessageHandler(dummy: String = "dummy") {
 
     var txout1: TxOut = new TxOut()
     var txout2: TxOut = new TxOut()
-    var balance = 8474938958
-    var amount = 1474938958
-    var fee = 10000000
+    var balance = 8474938958L
+    var amount = 1474938958L
+    var fee = 10000000L
 
     var toAddr = "2NA98LJynfmvBXVGPvcfM6MWUbfHvrJLofM"
-    var decodedToAddr = decodedAddress(toAddr)
+    var decodedToAddr = decodeAddress(toAddr)
     var decodedFromAddr = decodeAddress(PUBLIC_BTC_ADDRESS)
 
     var lockingScript1: ByteBuffer = ByteBuffer.allocate(22)
@@ -601,6 +601,8 @@ class MessageHandler(dummy: String = "dummy") {
     Arrays.copyOfRange(hashTypeCode, 0, beHashed, encoded_tx.length, hashTypeCode.length)
     var beSigned: Array[Byte] = sha256(beHashed)
     var sign: Array[Byte] = getSign(beSigned, secKey)
+
+    return new Tx()
   }
 
   def getSign(data: Array[Byte], pri_key: Array[Byte]): Array[Byte] = {
@@ -609,19 +611,17 @@ class MessageHandler(dummy: String = "dummy") {
       val spec = ECNamedCurveTable.getParameterSpec("secp256k1")
       val ecdsaSigner = new ECDSASigner()
       val domain = new ECDomainParameters(spec.getCurve, spec.getG, spec.getN)
-      val privateKeyParms = new ECPrivateKeyParameters(new BigInteger()(1, privateKey), domain)
+      val privateKeyParms = new ECPrivateKeyParameters(new BigInteger(1, pri_key), domain)
       val params = new ParametersWithRandom(privateKeyParms)
       ecdsaSigner.init(true, params)
-      val sig: BigInteger = ecdsaSigner.generateSignature(data)
+      val sig: Array[BigInteger] = ecdsaSigner.generateSignature(data)
 
       return sig.toByteArray()
     } catch {
       case e: Exception =>
-        val errors = new StringWriter
-        e.printStackTrace(new PrintWriter(errors))
-        logger.error(errors.toString)
         return null
     }
+  }
 
   def writeTx() = {
 
