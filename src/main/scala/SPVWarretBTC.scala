@@ -147,12 +147,13 @@ class MessageHandler(dummy: String = "dummy") {
 
   def op_pushdata(obj: Array[Byte]): Array[Byte] = {
     // オペコードが不明なので書き込まない
-    var len = byteToLittleNosin(obj.length.asInstanceOf[Byte])
-    var ret = new Array[Byte](obj.length+1)
-
-    ret(0) = len
-    System.arraycopy(obj, 0, ret, 1, obj.length)
-    return ret
+//    var len = byteToLittleNosin(obj.length.asInstanceOf[Byte])
+//    var ret = new Array[Byte](obj.length+1)
+//
+//    ret(0) = len
+//    System.arraycopy(obj, 0, ret, 1, obj.length)
+//    return ret
+    return obj
   }
 
   def storedKeyCheck() = {
@@ -513,7 +514,7 @@ class MessageHandler(dummy: String = "dummy") {
   def createTx(): Tx ={
     var tx: Tx = new Tx()
     tx.version = 1
-    tx.locktime = 0
+    tx.locktime = 0x00
 
     var outpoint: Outpoint = new OutPoint()
     outpoint.hash = DatatypeConverter.parseHexBinary("1b320ad6e1fd8a2caa5d832d4c8ff5bd72f750f1715a718d3983a366b093a4aa")
@@ -521,7 +522,7 @@ class MessageHandler(dummy: String = "dummy") {
     //リバースする
     var tmpList: java.util.List = Arrays.asList(outpoint.hash)
     Collections.reverse(tmpList)
-    outpoint.hash = tmpList.toArray(new Array[Byte](output.hash.length))
+    outpoint.hash = tmpList.toArray(new Array[Byte](outpoint.hash.length))
 
     outpoint.index = 0x00
 
@@ -557,6 +558,15 @@ class MessageHandler(dummy: String = "dummy") {
     txout2.value = (balance - amount - fee)
     txout2.pkScript = lockingScript2
 
+    var subscript = "76a9146543e081b512be7267c61bae0040192574ab19f088a"
+    txin.signatureScript = DatatypeConverter.parseHexBinary(subscript)
+    tx.txIn = Array(txin)
+    tx.txOut = Array(txout1, txout2)
+
+    //署名
+    var hashType: Byte = 0x01.asInstanceOf[Byte]
+    var hashTypeCode: Array[Byte] = Array(0x01, 0x00, 0x00, 0x00)
+    var secKey: Array[Byte] = decodeWIF(PUBLIC_BTC_ADDRESS)
     
 
   }
