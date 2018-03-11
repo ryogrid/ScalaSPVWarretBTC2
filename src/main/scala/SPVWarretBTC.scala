@@ -39,6 +39,21 @@ import org.bouncycastle.util.encoders.Hex
 
 import scala.io.Source
 
+import java.security.NoSuchAlgorithmException
+import java.security.PrivateKey
+import java.security.SignatureException
+
+import org.bouncycastle.crypto.params.ECDomainParameters
+import org.bouncycastle.crypto.params.ECPrivateKeyParameters
+import org.bouncycastle.crypto.params.ParametersWithRandom
+import org.bouncycastle.crypto.signers.ECDSASigner
+import org.bouncycastle.jce.ECNamedCurveTable
+import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec
+import java.io.PrintWriter
+import java.io.StringWriter
+import java.security.Security
+
 class MessageHeader(
                      var magic: Int = 0,
                      var commandName: Array[Byte] = new Array[Byte](12),
@@ -585,8 +600,28 @@ class MessageHandler(dummy: String = "dummy") {
     Arrays.copyOfRange(encoded_tx, 0, beHashed, 0, encoded_tx.length)
     Arrays.copyOfRange(hashTypeCode, 0, beHashed, encoded_tx.length, hashTypeCode.length)
     var beSigned: Array[Byte] = sha256(beHashed)
-    
+    var sign: Array[Byte] = getSign(beSigned, secKey)
   }
+
+  def getSign(data: Array[Byte], pri_key: Array[Byte]): Array[Byte] = {
+    try {
+      Security.addProvider(new BouncyCastleProvider())
+      val spec = ECNamedCurveTable.getParameterSpec("secp256k1")
+      val ecdsaSigner = new ECDSASigner()
+      val domain = new ECDomainParameters(spec.getCurve, spec.getG, spec.getN)
+      val privateKeyParms = new ECPrivateKeyParameters(new BigInteger()(1, privateKey), domain)
+      val params = new ParametersWithRandom(privateKeyParms)
+      ecdsaSigner.init(true, params)
+      val sig: BigInteger = ecdsaSigner.generateSignature(data)
+
+      return sig.toByteArray()
+    } catch {
+      case e: Exception =>
+        val errors = new StringWriter
+        e.printStackTrace(new PrintWriter(errors))
+        logger.error(errors.toString)
+        return null
+    }
 
   def writeTx() = {
 
