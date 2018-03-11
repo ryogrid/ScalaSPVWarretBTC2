@@ -512,16 +512,16 @@ class MessageHandler(dummy: String = "dummy") {
   }
 
   def encodeInconmpTx(tx: Tx): Array[Byte] = {
-    var buf: ByteBuffer = ByteBuffer.allocate(1000)
-    buf.put(intToLittleNosin(tx.version))
-    buf.put(tx.txIn(0).previousOutput.hash)
-    buf.put(intToLittleNosin(tx.txIn(0).previousOutput.index))
-    buf.put(longToLittleNosin(tx.txOut(0).value))
-    buf.put(tx.txOut(0).pkScript.array())
-    buf.put(longToLittleNosin(tx.txOut(1).value))
-    buf.put(tx.txOut(1).pkScript.array())
-    buf.put(intToLittleNosin(tx.locktime))
-    return buf
+    var buf: ByteBuffer = ByteBuffer.allocate(106)
+    buf.put(intToLittleNosin(tx.version)) //4
+    buf.put(tx.txIn(0).previousOutput.hash) //32 fixed
+    buf.put(intToLittleNosin(tx.txIn(0).previousOutput.index)) //4
+    buf.put(longToLittleNosin(tx.txOut(0).value)) //8
+    buf.put(tx.txOut(0).pkScript.array()) //24
+    buf.put(longToLittleNosin(tx.txOut(1).value)) //8
+    buf.put(tx.txOut(1).pkScript.array()) //22
+    buf.put(intToLittleNosin(tx.locktime)) //4
+    return buf.array()
   }
 
   def createTx(): Tx ={
@@ -580,8 +580,12 @@ class MessageHandler(dummy: String = "dummy") {
     var hashType: Byte = 0x01.asInstanceOf[Byte]
     var hashTypeCode: Array[Byte] = Array(0x01, 0x00, 0x00, 0x00)
     var secKey: Array[Byte] = decodeWIF(PUBLIC_BTC_ADDRESS)
-
-
+    var encoded_tx: Array[Byte] = encodeInconmpTx(tx)
+    var beHashed: Array[Byte] = new Array[Byte](106+4)
+    Arrays.copyOfRange(encoded_tx, 0, beHashed, 0, encoded_tx.length)
+    Arrays.copyOfRange(hashTypeCode, 0, beHashed, encoded_tx.length, hashTypeCode.length)
+    var beSigned: Array[Byte] = sha256(beHashed)
+    
   }
 
   def writeTx() = {

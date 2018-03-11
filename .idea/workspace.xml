@@ -24,8 +24,8 @@
       <file leaf-file-name="SPVWarretBTC.scala" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/scala/SPVWarretBTC.scala">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="187">
-              <caret line="523" column="5" lean-forward="true" selection-start-line="523" selection-start-column="5" selection-end-line="523" selection-end-column="5" />
+            <state relative-caret-position="221">
+              <caret line="587" column="4" lean-forward="false" selection-start-line="587" selection-start-column="4" selection-end-line="587" selection-end-column="4" />
               <folding>
                 <element signature="e#0#16#0" expanded="true" />
               </folding>
@@ -58,8 +58,9 @@
       <find>encode</find>
       <find>arraybuffer</find>
       <find>decode</find>
-      <find>encodeIn</find>
       <find>commandname</find>
+      <find>encodeinco</find>
+      <find>encodeIn</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -376,8 +377,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/scala/SPVWarretBTC.scala">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="187">
-          <caret line="523" column="5" lean-forward="true" selection-start-line="523" selection-start-column="5" selection-end-line="523" selection-end-column="5" />
+        <state relative-caret-position="221">
+          <caret line="587" column="4" lean-forward="false" selection-start-line="587" selection-start-column="4" selection-end-line="587" selection-end-column="4" />
           <folding>
             <element signature="e#0#16#0" expanded="true" />
           </folding>
