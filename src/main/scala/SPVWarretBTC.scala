@@ -88,7 +88,7 @@ class Tx(
 
 class TxOut(
              var value: Long = 0,
-             var pkScript: ArrayBuffer[Byte] = null
+             var pkScript: ByteBuffer = null
            )
 
 class Inv(
@@ -511,6 +511,19 @@ class MessageHandler(dummy: String = "dummy") {
     writeHeader(header)
   }
 
+  def encodeInconmpTx(tx: Tx): Array[Byte] = {
+    var buf: ByteBuffer = ByteBuffer.allocate(1000)
+    buf.put(intToLittleNosin(tx.version))
+    buf.put(tx.txIn(0).previousOutput.hash)
+    buf.put(intToLittleNosin(tx.txIn(0).previousOutput.index))
+    buf.put(longToLittleNosin(tx.txOut(0).value))
+    buf.put(tx.txOut(0).pkScript.array())
+    buf.put(longToLittleNosin(tx.txOut(1).value))
+    buf.put(tx.txOut(1).pkScript.array())
+    buf.put(intToLittleNosin(tx.locktime))
+    return buf
+  }
+
   def createTx(): Tx ={
     var tx: Tx = new Tx()
     tx.version = 1
@@ -540,12 +553,12 @@ class MessageHandler(dummy: String = "dummy") {
     var decodedToAddr = decodedAddress(toAddr)
     var decodedFromAddr = decodeAddress(PUBLIC_BTC_ADDRESS)
 
-    var lockingScript1: ByteArray = new ByteArray(22)
+    var lockingScript1: ByteBuffer = ByteBuffer.allocate(22)
     lockingScript1.put(byteToLittleNosin(OP_HASH160))
     lockingScript1.put(op_pushdata(decodedToAddr))
     lockingScript1.put(byteToLittleNosin(OP_EQUAL))
 
-    var lockingScript2: ByteArray = new ByteArray(24)
+    var lockingScript2: ByteBuffer = ByteBuffer.allocate(24)
     lockingScript1.put(byteToLittleNosin(OP_DUP))
     lockingScript1.put(byteToLittleNosin(OP_HASH160))
     lockingScript1.put(op_pushdata(decodedFromAddr))
@@ -567,7 +580,7 @@ class MessageHandler(dummy: String = "dummy") {
     var hashType: Byte = 0x01.asInstanceOf[Byte]
     var hashTypeCode: Array[Byte] = Array(0x01, 0x00, 0x00, 0x00)
     var secKey: Array[Byte] = decodeWIF(PUBLIC_BTC_ADDRESS)
-    
+
 
   }
 
