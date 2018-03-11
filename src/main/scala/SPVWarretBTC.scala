@@ -4,8 +4,7 @@ import java.net.Socket
 import java.security._
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import java.util.Arrays
-import java.util.ArrayList
+import java.util.{ArrayList, Arrays, Collections}
 
 import org.bouncycastle.util.io.pem.PemWriter
 
@@ -17,7 +16,6 @@ import javax.xml.bind.DatatypeConverter
 
 import scala.util.control.Breaks
 import javax.xml.bind.DatatypeConverter
-
 import java.security.spec.ECPublicKeySpec
 
 import org.bouncycastle.jcajce.provider.asymmetric.util.EC5Util
@@ -29,13 +27,11 @@ import java.security.KeyFactory
 import java.security.NoSuchAlgorithmException
 import java.security.NoSuchProviderException
 import java.security.spec.InvalidKeySpecException
-
 import java.io.PrintWriter
 import java.io.StringWriter
 
 import org.bouncycastle.jce.ECNamedCurveTable
 import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec
-
 import java.math.BigInteger
 
 import org.bouncycastle.crypto.digests.RIPEMD160Digest
@@ -64,23 +60,23 @@ class Version(
                var addrFrom: NetAddr = null,
                var nonce: Long = 0,
                var userAgent: Array[Char] = null,
-               var startHeight:Int = 0,
+               var startHeight: Int = 0,
                var relay: Boolean = false,
                var bytes: Int = 86
              )
 
 class Verack(var commandName: String = "verack")
 
-class OutPoint (
-                 var hash: Array[Byte] = new Array[Byte](32),
-                 var index: Int = 0
-               )
+class OutPoint(
+                var hash: Array[Byte] = new Array[Byte](32),
+                var index: Int = 0
+              )
 
-class TxIn (
-             var previousOutput: OutPoint = null,
-             var signatureScript: StringBuffer = null,
-             var sequence: Int = 0
-           )
+class TxIn(
+            var previousOutput: OutPoint = null,
+            var signatureScript: StringBuffer = null,
+            var sequence: Int = 0
+          )
 
 class Tx(
           var version: Int = 0,
@@ -92,7 +88,7 @@ class Tx(
 
 class TxOut(
              var value: Long = 0,
-             var pkScript: StringBuffer = null
+             var pkScript: ArrayBuffer[Byte] = null
            )
 
 class Inv(
@@ -101,8 +97,8 @@ class Inv(
          )
 
 class Inventory(
-               var invType: int = 0,
-               var hash: Array[Byte] = new Array[Byte](32)
+                 var invType: Int = 0,
+                 var hash: Array[Byte] = new Array[Byte](32)
                )
 
 class GetData(
@@ -112,10 +108,13 @@ class GetData(
              )
 
 
-class MessageHandler(dummy:String = "dummy") {
-  val client: Socket = null//new Socket("testnet-seed.bitcoin.jonasschnelli.ch", 18333)
-  val din: DataInputStream = null//new DataInputStream(client.getInputStream())
-  var dout: DataOutputStream = null//new DataOutputStream(client.getOutputStream())
+class MessageHandler(dummy: String = "dummy") {
+  val client: Socket = null
+  //new Socket("testnet-seed.bitcoin.jonasschnelli.ch", 18333)
+  val din: DataInputStream = null
+  //new DataInputStream(client.getInputStream())
+  var dout: DataOutputStream = null
+  //new DataOutputStream(client.getOutputStream())
   val ALPHABET: Array[Char] = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz".toCharArray()
   val ENCODED_ZERO = ALPHABET(0)
   var INDEXES: Array[Int] = new Array[Int](128)
@@ -123,36 +122,46 @@ class MessageHandler(dummy:String = "dummy") {
   val RANDOM_NUMBER_ALGORITHM_PROVIDER = "SUN"
   val PRIVATE_PATH = "./privateWIF.key"
   val PUBLIC_PATH = "./publicBTCAddress.key"
-  var PRIVATE_KEY_WIF : String = null
-  var PUBLIC_BTC_ADDRESS : String = null
+  var PRIVATE_KEY_WIF: String = null
+  var PUBLIC_BTC_ADDRESS: String = null
 
-  val OP_DUP         = 0x76
-  val OP_EQUAL       = 0x87
-  val OP_EQUALVERIFY = 0x88
-  val OP_HASH160     = 0xA9
-  val OP_CHECKSIG    = 0xAC
+  val OP_DUP = 0x76.asInstanceOf[Byte]
+  val OP_EQUAL = 0x87.asInstanceOf[Byte]
+  val OP_EQUALVERIFY = 0x88.asInstanceOf[Byte]
+  val OP_HASH160 = 0xA9.asInstanceOf[Byte]
+  val OP_CHECKSIG = 0xAC.asInstanceOf[Byte]
 
-  val INV_ERROR              = 0
-  val INV_MSG_TX             = 1
-  val INV_MSG_BLOCK          = 2
+  val INV_ERROR = 0
+  val INV_MSG_TX = 1
+  val INV_MSG_BLOCK = 2
   val INV_MSG_FILTERED_BLOCK = 3
-  val INV_MSG_CMPCT_BLOCK    = 4
+  val INV_MSG_CMPCT_BLOCK = 4
 
-  def this(){
+  def this() {
     this("dummy")
     Arrays.fill(INDEXES, -1)
-    for(i <- 0 until ALPHABET.length){
+    for (i <- 0 until ALPHABET.length) {
       INDEXES(ALPHABET(i)) = i
     }
   }
 
+  def op_pushdata(obj: Array[Byte]): Array[Byte] = {
+    // オペコードが不明なので書き込まない
+    var len = byteToLittleNosin(obj.length.asInstanceOf[Byte])
+    var ret = new Array[Byte](obj.length+1)
+
+    ret(0) = len
+    System.arraycopy(obj, 0, ret, 1, obj.length)
+    return ret
+  }
+
   def storedKeyCheck() = {
     // ファイルがあれば読み込み、保存されてなければ新たに生成して保存
-    if(checkFile(PRIVATE_PATH)){
+    if (checkFile(PRIVATE_PATH)) {
       PRIVATE_KEY_WIF = readFromFile(PRIVATE_PATH)
       PUBLIC_BTC_ADDRESS = readFromFile(PUBLIC_PATH)
       println("keys stored:")
-    }else{
+    } else {
       var pairs: ArrayList[Array[Byte]] = getKeyPairBytes()
       PRIVATE_KEY_WIF = encodeWIF(pairs.get(0))
       PUBLIC_BTC_ADDRESS = encodeBTCAddress((pairs.get(1)))
@@ -179,14 +188,14 @@ class MessageHandler(dummy:String = "dummy") {
     }
   }
 
-  def saveTofFile(path:String, str:String) = {
+  def saveTofFile(path: String, str: String) = {
     val file = new PrintWriter(path)
     file.write(str)
     file.close()
   }
 
   def generatePrivateKey(): Array[Byte] = {
-    var secureRandom:SecureRandom = null
+    var secureRandom: SecureRandom = null
     try
       secureRandom = SecureRandom.getInstance(RANDOM_NUMBER_ALGORITHM, RANDOM_NUMBER_ALGORITHM_PROVIDER)
     catch {
@@ -231,21 +240,25 @@ class MessageHandler(dummy:String = "dummy") {
     sha256(sha256(payload))
   }
 
-  def decodeWIF(str: String): Array[Byte] ={
-    var decoded : Array[Byte] = decodeBase58(str)
+  def decodeWIF(str: String): Array[Byte] = {
+    var decoded: Array[Byte] = decodeBase58(str)
     return Arrays.copyOfRange(decoded, 1, decoded.length - 4)
   }
 
-  def encodeBTCAddress(pubArr: Array[Byte]) : String ={
-//    var prefix: Array[Byte] = Array(0x04)
-//    var pub_with_prefix: Array[Byte] = new Array[Byte](pubArr.length + 1)
-//    System.arraycopy(prefix, 0, pub_with_prefix, 0, 1)
-//    System.arraycopy(pubArr, 0, pub_with_prefix, 1, pubArr.length)
-//    var hashed: Array[Byte] = hash160(pub_with_prefix)
+  def decodeAddress(str: String): Array[Byte] = {
+    return decodeWIF(str)
+  }
+
+  def encodeBTCAddress(pubArr: Array[Byte]): String = {
+    //    var prefix: Array[Byte] = Array(0x04)
+    //    var pub_with_prefix: Array[Byte] = new Array[Byte](pubArr.length + 1)
+    //    System.arraycopy(prefix, 0, pub_with_prefix, 0, 1)
+    //    System.arraycopy(pubArr, 0, pub_with_prefix, 1, pubArr.length)
+    //    var hashed: Array[Byte] = hash160(pub_with_prefix)
 
     var hashed: Array[Byte] = hash160(pubArr)
     val hashed_with_prefix: Array[Byte] = new Array[Byte](hashed.length + 1)
-    val prefix2: Array[Byte]  = Array(0x6f)
+    val prefix2: Array[Byte] = Array(0x6f)
     System.arraycopy(prefix2, 0, hashed_with_prefix, 0, 1)
     System.arraycopy(hashed, 0, hashed_with_prefix, 1, hashed.length)
     val checksum: Array[Byte] = hash256(hashed_with_prefix)
@@ -303,7 +316,7 @@ class MessageHandler(dummy:String = "dummy") {
     if (input.length == 0) return ""
     // Count leading zeros.
     var zeros = 0
-    while (zeros < input.length && input(zeros) == 0){
+    while (zeros < input.length && input(zeros) == 0) {
       zeros += 1
     }
     // Convert base-256 digits to base-58 digits (plus conversion to ASCII characters)
@@ -312,20 +325,20 @@ class MessageHandler(dummy:String = "dummy") {
     val encoded = new Array[Char](tmp.length * 2)
     // upper bound
     var outputStart = encoded.length
-    var inputStart:Int = zeros
-    while(inputStart < tmp.length){
+    var inputStart: Int = zeros
+    while (inputStart < tmp.length) {
       outputStart -= 1
       encoded(outputStart) = ALPHABET(divmod(input, inputStart, 256, 58))
-      if (input(inputStart) == 0){
+      if (input(inputStart) == 0) {
         inputStart += 1 // optimization - skip leading zeros
       }
     }
     // Preserve exactly as many leading encoded zeros in output as there were leading zeros in input.
-    while (outputStart < encoded.length && encoded(outputStart) == ENCODED_ZERO){
+    while (outputStart < encoded.length && encoded(outputStart) == ENCODED_ZERO) {
       outputStart += 1
     }
     zeros -= 1
-    while (zeros >= 0){
+    while (zeros >= 0) {
       outputStart -= 1
       encoded(outputStart) = ENCODED_ZERO
       zeros -= 1
@@ -336,7 +349,7 @@ class MessageHandler(dummy:String = "dummy") {
 
   def divmod(number: Array[Byte], firstDigit: Int, base: Int, divisor: Int): Byte = {
     var remainder = 0
-    for(i <- firstDigit until number.length) {
+    for (i <- firstDigit until number.length) {
       var digit = number(i).asInstanceOf[Int] & 0xFF
       var temp = remainder * base + digit
       number(i) = (temp / divisor).asInstanceOf[Byte]
@@ -352,12 +365,12 @@ class MessageHandler(dummy:String = "dummy") {
     val input58 = new Array[Byte](input.length)
     for (i <- 0 until input.length) {
       var c = input.charAt(i)
-      var digit = if (c < 128){
+      var digit = if (c < 128) {
         INDEXES(c)
       } else {
         -1
       }
-      if (digit < 0){
+      if (digit < 0) {
         println("Illegal character " + c + " at position " + i)
         System.exit(0)
       }
@@ -371,11 +384,11 @@ class MessageHandler(dummy:String = "dummy") {
     // Convert base-58 digits to base-256 digits.
     val decoded = new Array[Byte](input.length)
     var outputStart = decoded.length
-    var inputStart:Int = zeros
-    while(inputStart < input58.length){
+    var inputStart: Int = zeros
+    while (inputStart < input58.length) {
       outputStart -= 1
       decoded(outputStart) = divmod(input58, inputStart, 58, 256)
-      if (input58(inputStart) == 0){
+      if (input58(inputStart) == 0) {
         inputStart += 1 // optimization - skip leading zeros
       }
     }
@@ -459,7 +472,7 @@ class MessageHandler(dummy:String = "dummy") {
 
   def writeNetAddr(buf: ByteBuffer): Unit = {
     buf.putLong(longToLittleNosin(1))
-    for(ip <- Array(0,0,0,0,0,0,0,0,0,0,255,255,127,0,0,1)){
+    for (ip <- Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 127, 0, 0, 1)) {
       buf.put(ip.asInstanceOf[Byte])
     }
     buf.putShort(8333)
@@ -469,7 +482,7 @@ class MessageHandler(dummy:String = "dummy") {
     val buf = ByteBuffer.allocate(86)
     buf.putInt(intToLittleNosin(70015))
     buf.putLong(longToLittleNosin(1))
-    buf.putLong(longToLittleNosin((System.currentTimeMillis()/1000).asInstanceOf[Long]))
+    buf.putLong(longToLittleNosin((System.currentTimeMillis() / 1000).asInstanceOf[Long]))
     writeNetAddr(buf)
     writeNetAddr(buf)
     buf.putLong(longToLittleNosin(0))
@@ -497,6 +510,57 @@ class MessageHandler(dummy:String = "dummy") {
     writeHeader(header)
   }
 
+  def createTx(): Tx ={
+    var tx: Tx = new Tx()
+    tx.version = 1
+    tx.locktime = 0
+
+    var outpoint: Outpoint = new OutPoint()
+    outpoint.hash = DatatypeConverter.parseHexBinary("1b320ad6e1fd8a2caa5d832d4c8ff5bd72f750f1715a718d3983a366b093a4aa")
+
+    //リバースする
+    var tmpList: java.util.List = Arrays.asList(outpoint.hash)
+    Collections.reverse(tmpList)
+    outpoint.hash = tmpList.toArray(new Array[Byte](output.hash.length))
+
+    outpoint.index = 0x00
+
+    var txin: TxIn = new TxIn()
+    txin.previousOutput = outpoint
+    txin.sequence = 0xFFFFFFFF
+
+    var txout1: TxOut = new TxOut()
+    var txout2: TxOut = new TxOut()
+    var balance = 8474938958
+    var amount = 1474938958
+    var fee = 10000000
+
+    var toAddr = "2NA98LJynfmvBXVGPvcfM6MWUbfHvrJLofM"
+    var decodedToAddr = decodedAddress(toAddr)
+    var decodedFromAddr = decodeAddress(PUBLIC_BTC_ADDRESS)
+
+    var lockingScript1: ByteArray = new ByteArray(22)
+    lockingScript1.put(byteToLittleNosin(OP_HASH160))
+    lockingScript1.put(op_pushdata(decodedToAddr))
+    lockingScript1.put(byteToLittleNosin(OP_EQUAL))
+
+    var lockingScript2: ByteArray = new ByteArray(24)
+    lockingScript1.put(byteToLittleNosin(OP_DUP))
+    lockingScript1.put(byteToLittleNosin(OP_HASH160))
+    lockingScript1.put(op_pushdata(decodedFromAddr))
+    lockingScript1.put(byteToLittleNosin(OP_EQUALVERIFY))
+    lockingScript1.put(byteToLittleNosin(OP_CHECKSIG))
+
+    txout1.value = amount
+    txout1.pkScript = lockingScript1
+
+    txout2.value = (balance - amount - fee)
+    txout2.pkScript = lockingScript2
+
+    
+
+  }
+
   def writeTx() = {
 
   }
@@ -506,6 +570,10 @@ class MessageHandler(dummy:String = "dummy") {
   }
 
   def writeTxOut() = {
+
+  }
+
+  def signTx() = {
 
   }
 
@@ -519,19 +587,19 @@ class MessageHandler(dummy:String = "dummy") {
     println("send version")
     var isVersion = false
     var isVerack = false
-    while((!isVersion) || (!isVerack)){
+    while ((!isVersion) || (!isVerack)) {
       val header = readHeader()
       val commandCharacters = new Array[Char](12)
-      for(i <- 0 until header.commandName.length){
+      for (i <- 0 until header.commandName.length) {
         commandCharacters(i) = header.commandName(i).asInstanceOf[Char]
       }
       val cmd = new String(commandCharacters)
       println("recv " + cmd)
-      if(cmd == "version") {
+      if (cmd == "version") {
         isVersion = true
         val ver = readVersion()
         writeVerack()
-      }else if(cmd == "verack"){
+      } else if (cmd == "verack") {
         isVerack = true
         val vack = readVerack()
       }
@@ -540,15 +608,15 @@ class MessageHandler(dummy:String = "dummy") {
 
 }
 
-object Main{
+object Main {
   def main(args: Array[String]) {
     val messageHandler = new MessageHandler()
     messageHandler.storedKeyCheck()
-//    var tmp: ArrayList[Array[Byte]] = messageHandler.getKeyPairBytes()
-//    println(messageHandler.encodeWIF(tmp.get(0)))
-//    println(messageHandler.encodeBTCAddress(tmp.get(1)))
-//    println(DatatypeConverter.printHexBinary(tmp.get(0)))
-//    println(DatatypeConverter.printHexBinary(tmp.get(1)))
+    //    var tmp: ArrayList[Array[Byte]] = messageHandler.getKeyPairBytes()
+    //    println(messageHandler.encodeWIF(tmp.get(0)))
+    //    println(messageHandler.encodeBTCAddress(tmp.get(1)))
+    //    println(DatatypeConverter.printHexBinary(tmp.get(0)))
+    //    println(DatatypeConverter.printHexBinary(tmp.get(1)))
 
     //messageHandler.withBitcoinConnection()
   }
