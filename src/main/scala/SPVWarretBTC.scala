@@ -54,6 +54,11 @@ import java.io.PrintWriter
 import java.io.StringWriter
 import java.security.Security
 
+import org.bouncycastle.asn1.ASN1Integer
+import org.bouncycastle.asn1.DERSequenceGenerator
+import java.io.ByteArrayOutputStream
+import java.io.IOException
+
 class MessageHeader(
                      var magic: Int = 0,
                      var commandName: Array[Byte] = new Array[Byte](12),
@@ -615,12 +620,19 @@ class MessageHandler(dummy: String = "dummy") {
       val params = new ParametersWithRandom(privateKeyParms)
       ecdsaSigner.init(true, params)
       val sig: Array[BigInteger] = ecdsaSigner.generateSignature(data)
-
-      return sig.toByteArray()
-    } catch {
-      case e: Exception =>
-        return null
+      val s = new ByteArrayOutputStream()
+      try {
+        val seq = new DERSequenceGenerator(s)
+        seq.addObject(new ASN1Integer(sig(0)))
+        seq.addObject(new ASN1Integer(sig(1)))
+        seq.close()
+        return s.toByteArray()
+      } catch {
+      }
+    }catch{
     }
+
+    return null
   }
 
   def writeTx() = {
