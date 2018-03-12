@@ -553,9 +553,11 @@ class MessageHandler(dummy: String = "dummy") {
     outpoint.hash = DatatypeConverter.parseHexBinary("1b320ad6e1fd8a2caa5d832d4c8ff5bd72f750f1715a718d3983a366b093a4aa")
 
     //リバースする
-    var tmpList: java.util.List[Byte] = Arrays.asList(outpoint.hash)
-    Collections.reverse(tmpList)
-    outpoint.hash = tmpList.toArray(new Array[Byte](outpoint.hash.length))
+    var tmpArr: Array[Byte] = new Array[Byte](32)
+    for (i <- 0 until tmpArr.length) {
+      tmpArr(i) = outpoint.hash(tmpArr.length - i - 1)
+    }
+    outpoint.hash = tmpArr
 
     outpoint.index = 0x00
 
@@ -602,8 +604,8 @@ class MessageHandler(dummy: String = "dummy") {
     var secKey: Array[Byte] = decodeWIF(PUBLIC_BTC_ADDRESS)
     var encoded_tx: Array[Byte] = encodeInconmpTx(tx)
     var beHashed: Array[Byte] = new Array[Byte](106+4)
-    Arrays.copyOfRange(encoded_tx, 0, beHashed, 0, encoded_tx.length)
-    Arrays.copyOfRange(hashTypeCode, 0, beHashed, encoded_tx.length, hashTypeCode.length)
+    System.arraycopy(encoded_tx, 0, beHashed, 0, encoded_tx.length)
+    System.arraycopy(hashTypeCode, 0, beHashed, encoded_tx.length, hashTypeCode.length)
     var beSigned: Array[Byte] = sha256(beHashed)
     var sign: Array[Byte] = getSign(beSigned, secKey)
 
@@ -628,8 +630,12 @@ class MessageHandler(dummy: String = "dummy") {
         seq.close()
         return s.toByteArray()
       } catch {
+        case e: Exception =>
+          println(e)
       }
     }catch{
+      case e: Exception =>
+        println(e)
     }
 
     return null
