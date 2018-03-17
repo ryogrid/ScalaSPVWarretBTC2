@@ -108,11 +108,11 @@ class Tx(
 
 class TxOut(
              var value: Long = 0,
-             var pkScript: ByteBuffer = null
+             var pkScript: Array[Byte] = null
            )
 
 class Inv(
-           var varlist: Array[Byte] = null,
+           var inv_count: Int = 0,
            var inventory: Array[Inventory] = null
          )
 
@@ -122,19 +122,19 @@ class Inventory(
                )
 
 class GetData(
-               var varlist: Array[Byte] = null,
+               var inv_num: Int = 0,
                var inventory: Array[Inventory] = null,
                var commandName: String = "getdata"
              )
 
 
 class MessageHandler(dummy: String = "dummy") {
-  val client: Socket = null
-  //new Socket("testnet-seed.bitcoin.jonasschnelli.ch", 18333)
-  val din: DataInputStream = null
-  //new DataInputStream(client.getInputStream())
-  var dout: DataOutputStream = null
-  //new DataOutputStream(client.getOutputStream())
+  //val client: Socket = null
+  val client: Socket = new Socket("testnet-seed.bitcoin.jonasschnelli.ch", 18333)
+  //val din: DataInputStream = null
+  val din: DataInputStream = new DataInputStream(client.getInputStream())
+  //var dout: DataOutputStream = null
+  var dout: DataOutputStream = new DataOutputStream(client.getOutputStream())
   val ALPHABET: Array[Char] = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz".toCharArray()
   val ENCODED_ZERO = ALPHABET(0)
   var INDEXES: Array[Int] = new Array[Int](128)
@@ -419,6 +419,34 @@ class MessageHandler(dummy: String = "dummy") {
     Arrays.copyOfRange(decoded, outputStart - zeros, decoded.length)
   }
 
+//  def intToBig(value: Array[Byte]): Int = {
+//    val buf = ByteBuffer.allocate(4)
+//    //buf.putInt(Integer.parseInt(String.valueOf(value)))
+//    buf.put(value)
+//    //buf.flip()
+//    buf.order(ByteOrder.LITTLE_ENDIAN)
+//    Integer.parseUnsignedInt(String.valueOf(buf.getInt()))
+//
+////    val hex = Integer.toHexString(buf.getInt())
+////    return Integer.valueOf(hex.toString, 16)
+//  }
+
+  def intToBig(value: Int): Int = {
+    val buf = ByteBuffer.allocate(4)
+    buf.putInt(value)
+    buf.flip()
+    buf.order(ByteOrder.LITTLE_ENDIAN)
+    Integer.parseUnsignedInt(String.valueOf(buf.getInt()))
+
+    //    val hex = Integer.toHexString(buf.getInt())
+    //    return Integer.valueOf(hex.toString, 16)
+  }
+
+  def byteToBig(value: Byte): Byte = {
+    val buf = ByteBuffer.allocate(1)
+    buf.put(value)
+    Integer.parseUnsignedInt(String.valueOf(value)).asInstanceOf[Byte]
+  }
 
   def longToLittleNosin(value: Long): Long = {
     val buf = ByteBuffer.allocate(8)
@@ -469,20 +497,50 @@ class MessageHandler(dummy: String = "dummy") {
   }
 
   def readHeader(): MessageHeader = {
-    val header = new MessageHeader
+    val header = new MessageHeader()
     din.readInt()
     val commandName = new Array[Byte](12)
     din.read(commandName, 0, 12)
     header.commandName = commandName
+    //var tmp_buf: Array[Byte] = new Array[Byte](4)
+    //din.read(tmp_buf, 0, 4)
+    header.payloadSize = intToBig(din.readInt())
+    //header.payloadSize = intToBig(tmp_buf)
+
     din.read(new Array[Byte](4), 0, 4)
     header
   }
 
+  def readInventory(): Inventory = {
+    var inv: Inventory = new Inventory()
+    inv.invType = intToBig(din.readInt())
+    var buf: Array[Byte] = new Array[Byte](32)
+    din.read(buf, 0, 32)
+    inv.hash = buf
+    inv
+  }
+
+  def readGetData(): GetData = {
+    var gdata = new GetData()
+    var inv_num: Byte = byteToBig(din.readByte())
+    gdata.inv_num = inv_num
+    var inv_arr: Array[Inventory] = new Array[Inventory](inv_num)
+    for(i <- 0 until inv_num){
+      inv_arr(i) = readInventory()
+    }
+    gdata.inventory = inv_arr
+    gdata
+  }
+
   def readNetAddr(): NetAddr = new NetAddr
 
-  def readVersion(): Version = new Version
+  def readVersion(): Version = {
+    return new Version()
+  }
 
-  def readVerack(): Verack = new Verack
+  def readVerack(): Verack = {
+    return new Verack()
+  }
 
   def writeHeader(header: MessageHeader): Unit = {
     dout.writeInt(header.magic)
@@ -537,11 +595,30 @@ class MessageHandler(dummy: String = "dummy") {
     buf.put(tx.txIn(0).previousOutput.hash) //32 fixed
     buf.putInt(intToLittleNosin(tx.txIn(0).previousOutput.index)) //4
     buf.putLong(longToLittleNosin(tx.txOut(0).value)) //8
-    buf.put(tx.txOut(0).pkScript.array()) //24
+    buf.put(tx.txOut(0).pkScript) //24
     buf.putLong(longToLittleNosin(tx.txOut(1).value)) //8
-    buf.put(tx.txOut(1).pkScript.array()) //22
+    buf.put(tx.txOut(1).pkScript) //22
     buf.putInt(intToLittleNosin(tx.locktime)) //4
     return buf.array()
+  }
+
+  def encodeTx(tx: Tx): Array[Byte] = {
+    var buf: ByteBuffer = ByteBuffer.allocate(106 + tx.txIn(0).signatureScript.length)
+    buf.putInt(intToLittleNosin(tx.version)) //4
+    buf.put(tx.txIn(0).previousOutput.hash) //32 fixed
+    buf.putInt(intToLittleNosin(tx.txIn(0).previousOutput.index)) //4
+    buf.put(tx.txIn(0).signatureScript)
+    buf.putLong(longToLittleNosin(tx.txOut(0).value)) //8
+    buf.put(tx.txOut(0).pkScript) //24
+    buf.putLong(longToLittleNosin(tx.txOut(1).value)) //8
+    buf.put(tx.txOut(1).pkScript) //22
+    buf.putInt(intToLittleNosin(tx.locktime)) //4
+    return buf.array()
+  }
+
+  def genTxId(tx: Tx): Array[Byte] ={
+    var data: Array[Byte] = encodeTx(tx)
+    return hash256(data)
   }
 
   def createTx(): Tx ={
@@ -588,10 +665,10 @@ class MessageHandler(dummy: String = "dummy") {
     lockingScript1.put(byteToLittleNosin(OP_CHECKSIG))
 
     txout1.value = amount
-    txout1.pkScript = lockingScript1
+    txout1.pkScript = lockingScript1.array()
 
     txout2.value = (balance - amount - fee)
-    txout2.pkScript = lockingScript2
+    txout2.pkScript = lockingScript2.array()
 
     var subscript = "76a9146543e081b512be7267c61bae0040192574ab19f088a"
     txin.signatureScript = DatatypeConverter.parseHexBinary(subscript)
@@ -609,7 +686,13 @@ class MessageHandler(dummy: String = "dummy") {
     var beSigned: Array[Byte] = sha256(beHashed)
     var sign: Array[Byte] = getSign(beSigned, secKey)
 
-    return new Tx()
+    var lockingScript3: ByteBuffer = ByteBuffer.allocate(sign.length + secKey.length)
+    lockingScript3.put(op_pushdata(sign))
+    lockingScript3.put(op_pushdata(secKey))
+
+    txin.signatureScript = lockingScript3.array()
+
+    return tx
   }
 
   def getSign(data: Array[Byte], pri_key: Array[Byte]): Array[Byte] = {
@@ -657,7 +740,37 @@ class MessageHandler(dummy: String = "dummy") {
 
   }
 
+  def writeInv(inv: Inv) = {
+    dout.writeInt(intToLittleNosin(inv.inventory(0).invType))
+    dout.write(inv.inventory(0).hash)
+  }
+
   def sendBTCToTestnetFaucet(): Unit = {
+    var tx: Tx = createTx()
+    var txid: Array[Byte] = genTxId(tx)
+    var inv: Inv = new Inv()
+    var inventory: Inventory = new Inventory()
+    inventory.invType = INV_MSG_TX
+    inventory.hash = txid
+    inv.inventory = Array(inventory)
+
+    writeInv(inv)
+
+    var null_buf: Array[Byte] = new Array[Byte](10000)
+    while (true) {
+      val header = readHeader()
+      val commandCharacters = new Array[Char](12)
+      for (i <- 0 until header.commandName.length) {
+        commandCharacters(i) = header.commandName(i).asInstanceOf[Char]
+      }
+      val cmd = new String(commandCharacters)
+      println("recv " + cmd)
+      if (cmd == "getdata") {
+        var gdata: GetData = readGetData()
+      }else{
+        din.read(null_buf, 0, header.payloadSize)
+      }
+    }
 
   }
 
@@ -667,6 +780,7 @@ class MessageHandler(dummy: String = "dummy") {
     println("send version")
     var isVersion = false
     var isVerack = false
+    var null_buf: Array[Byte] = new Array[Byte](10000)
     while ((!isVersion) || (!isVerack)) {
       val header = readHeader()
       val commandCharacters = new Array[Char](12)
@@ -674,14 +788,18 @@ class MessageHandler(dummy: String = "dummy") {
         commandCharacters(i) = header.commandName(i).asInstanceOf[Char]
       }
       val cmd = new String(commandCharacters)
-      println("recv " + cmd)
+      println("recv " + cmd + " " + header.payloadSize.toString())
       if (cmd == "version") {
         isVersion = true
         val ver = readVersion()
+        din.read(null_buf, 0, header.payloadSize)
         writeVerack()
       } else if (cmd == "verack") {
         isVerack = true
         val vack = readVerack()
+        din.read(null_buf, 0, header.payloadSize)
+      } else {
+        din.read(null_buf, 0, header.payloadSize)
       }
     }
   }
@@ -698,6 +816,6 @@ object Main {
     //    println(DatatypeConverter.printHexBinary(tmp.get(0)))
     //    println(DatatypeConverter.printHexBinary(tmp.get(1)))
 
-    //messageHandler.withBitcoinConnection()
+    messageHandler.withBitcoinConnection()
   }
 }
