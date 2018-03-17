@@ -724,20 +724,9 @@ class MessageHandler(dummy: String = "dummy") {
     return null
   }
 
-  def writeTx() = {
-
-  }
-
-  def writeTxIn() = {
-
-  }
-
-  def writeTxOut() = {
-
-  }
-
-  def signTx() = {
-
+  def writeTx(tx: Tx) = {
+    var data: Array[Byte] = encodeTx(tx)
+    dout.write(data, 0, data.length)
   }
 
   def writeInv(inv: Inv) = {
@@ -767,6 +756,15 @@ class MessageHandler(dummy: String = "dummy") {
       println("recv " + cmd)
       if (cmd == "getdata") {
         var gdata: GetData = readGetData()
+        var inv: Inventory = null
+        for(i <- 0 until gdata.inv_num){
+          if(gdata.inventory(i).invType == INV_MSG_TX && gdata.inventory(i).hash.deep == txid.deep){
+            inv = gdata.inventory(i)
+          }
+        }
+        if(inv != null){
+          writeTx()
+        }
       }else{
         din.read(null_buf, 0, header.payloadSize)
       }
@@ -817,5 +815,6 @@ object Main {
     //    println(DatatypeConverter.printHexBinary(tmp.get(1)))
 
     messageHandler.withBitcoinConnection()
+    messageHandler.sendBTCToTestnetFaucet()
   }
 }
