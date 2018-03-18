@@ -731,6 +731,19 @@ class MessageHandler(dummy: String = "dummy") {
   }
 
   def writeInv(inv: Inv) = {
+    val header = new MessageHeader()
+    header.magic = intToLittleNosin(0x0709110B)
+    val commandName = "inv".toCharArray()
+    for (i <- 0 until commandName.length) {
+      header.commandName(i) = commandName(i).asInstanceOf[Byte]
+    }
+    header.payloadSize = intToLittleNosin(0)
+    header.checksum(0) = 0x5d.asInstanceOf[Byte]
+    header.checksum(1) = 0xf6.asInstanceOf[Byte]
+    header.checksum(2) = 0xe0.asInstanceOf[Byte]
+    header.checksum(3) = 0xe2.asInstanceOf[Byte]
+
+    writeHeader(header)
     dout.writeInt(intToLittleNosin(inv.inventory(0).invType))
     dout.write(inv.inventory(0).hash)
   }
