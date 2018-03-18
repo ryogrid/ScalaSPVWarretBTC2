@@ -773,6 +773,7 @@ class MessageHandler(dummy: String = "dummy") {
     dout.writeByte(1)
     dout.writeInt(inv.inventory(0).invType)
     dout.write(inv.inventory(0).hash)
+    dout.flush()
   }
 
   def sendBTCToTestnetFaucet(): Unit = {
