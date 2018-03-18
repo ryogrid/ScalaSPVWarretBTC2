@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="a50a631c-94c6-4c66-80a2-c56740ccd8b2" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/scala/SPVWarretBTC.scala" afterPath="$PROJECT_DIR$/src/main/scala/SPVWarretBTC.scala" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
@@ -24,8 +25,8 @@
       <file leaf-file-name="SPVWarretBTC.scala" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/scala/SPVWarretBTC.scala">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="502">
-              <caret line="817" column="43" lean-forward="false" selection-start-line="817" selection-start-column="43" selection-end-line="817" selection-end-column="43" />
+            <state relative-caret-position="399">
+              <caret line="794" column="30" lean-forward="true" selection-start-line="794" selection-start-column="30" selection-end-line="794" selection-end-column="30" />
               <folding>
                 <element signature="e#0#16#0" expanded="true" />
               </folding>
@@ -37,10 +38,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>160</find>
-      <find>securerandom</find>
-      <find>encodebase58</find>
-      <find>Tx</find>
       <find>copy</find>
       <find>Datatype</find>
       <find>op_push</find>
@@ -67,6 +64,10 @@
       <find>readgetdata</find>
       <find>for</find>
       <find>getdata</find>
+      <find>writetx</find>
+      <find>bytetolitt</find>
+      <find>checksum</find>
+      <find>writeverack</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -362,7 +363,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="scala-line">
           <url>file://$PROJECT_DIR$/src/main/scala/SPVWarretBTC.scala</url>
-          <line>565</line>
+          <line>566</line>
           <properties />
           <option name="timeStamp" value="1" />
         </line-breakpoint>
@@ -409,8 +410,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/scala/SPVWarretBTC.scala">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="502">
-          <caret line="817" column="43" lean-forward="false" selection-start-line="817" selection-start-column="43" selection-end-line="817" selection-end-column="43" />
+        <state relative-caret-position="399">
+          <caret line="794" column="30" lean-forward="true" selection-start-line="794" selection-start-column="30" selection-end-line="794" selection-end-column="30" />
           <folding>
             <element signature="e#0#16#0" expanded="true" />
           </folding>

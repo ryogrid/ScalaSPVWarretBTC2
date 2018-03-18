@@ -475,9 +475,10 @@ class MessageHandler(dummy: String = "dummy") {
   def byteToLittleNosin(value: Byte): Byte = {
     val buf = ByteBuffer.allocate(1)
     buf.put(value)
-    buf.flip()
-    buf.order(ByteOrder.LITTLE_ENDIAN)
-    Integer.parseUnsignedInt(String.valueOf(buf.get())).asInstanceOf[Byte]
+    //buf.flip()
+    //buf.order(ByteOrder.LITTLE_ENDIAN)
+    //Integer.parseUnsignedInt(String.valueOf(buf.get())).asInstanceOf[Byte]
+    Integer.parseUnsignedInt(String.valueOf(value)).asInstanceOf[Byte]
   }
 
   def createHeader(msg: Version, data: Array[Byte]): MessageHeader = {
@@ -581,10 +582,10 @@ class MessageHandler(dummy: String = "dummy") {
       header.commandName(i) = commandName(i).asInstanceOf[Byte]
     }
     header.payloadSize = intToLittleNosin(0)
-    header.checksum(0) = shortToLittleNosin(0x5d).asInstanceOf[Byte]
-    header.checksum(1) = shortToLittleNosin(0xf6).asInstanceOf[Byte]
-    header.checksum(2) = shortToLittleNosin(0xe0).asInstanceOf[Byte]
-    header.checksum(3) = shortToLittleNosin(0xe2).asInstanceOf[Byte]
+    header.checksum(0) = 0x5d.asInstanceOf[Byte]
+    header.checksum(1) = 0xf6.asInstanceOf[Byte]
+    header.checksum(2) = 0xe0.asInstanceOf[Byte]
+    header.checksum(3) = 0xe2.asInstanceOf[Byte]
 
     writeHeader(header)
   }
@@ -653,16 +654,16 @@ class MessageHandler(dummy: String = "dummy") {
     var decodedFromAddr = decodeAddress(PUBLIC_BTC_ADDRESS)
 
     var lockingScript1: ByteBuffer = ByteBuffer.allocate(22)
-    lockingScript1.put(byteToLittleNosin(OP_HASH160))
+    lockingScript1.put(OP_HASH160)
     lockingScript1.put(op_pushdata(decodedToAddr))
-    lockingScript1.put(byteToLittleNosin(OP_EQUAL))
+    lockingScript1.put(OP_EQUAL)
 
     var lockingScript2: ByteBuffer = ByteBuffer.allocate(24)
-    lockingScript1.put(byteToLittleNosin(OP_DUP))
-    lockingScript1.put(byteToLittleNosin(OP_HASH160))
-    lockingScript1.put(op_pushdata(decodedFromAddr))
-    lockingScript1.put(byteToLittleNosin(OP_EQUALVERIFY))
-    lockingScript1.put(byteToLittleNosin(OP_CHECKSIG))
+    lockingScript2.put(OP_DUP)
+    lockingScript2.put(OP_HASH160)
+    lockingScript2.put(op_pushdata(decodedFromAddr))
+    lockingScript2.put(OP_EQUALVERIFY)
+    lockingScript2.put(OP_CHECKSIG)
 
     txout1.value = amount
     txout1.pkScript = lockingScript1.array()
@@ -670,7 +671,7 @@ class MessageHandler(dummy: String = "dummy") {
     txout2.value = (balance - amount - fee)
     txout2.pkScript = lockingScript2.array()
 
-    var subscript = "76a9146543e081b512be7267c61bae0040192574ab19f088a"
+    var subscript = "076a9146543e081b512be7267c61bae0040192574ab19f088a"
     txin.signatureScript = DatatypeConverter.parseHexBinary(subscript)
     tx.txIn = Array(txin)
     tx.txOut = Array(txout1, txout2)
@@ -754,7 +755,7 @@ class MessageHandler(dummy: String = "dummy") {
       }
       val cmd = new String(commandCharacters)
       println("recv " + cmd)
-      if (cmd == "getdata") {
+      if (cmd.contains("getdata")) {
         var gdata: GetData = readGetData()
         var inv: Inventory = null
         for(i <- 0 until gdata.inv_num){
@@ -763,7 +764,7 @@ class MessageHandler(dummy: String = "dummy") {
           }
         }
         if(inv != null){
-          writeTx()
+          writeTx(tx)
         }
       }else{
         din.read(null_buf, 0, header.payloadSize)
@@ -787,12 +788,13 @@ class MessageHandler(dummy: String = "dummy") {
       }
       val cmd = new String(commandCharacters)
       println("recv " + cmd + " " + header.payloadSize.toString())
-      if (cmd == "version") {
+      if (cmd.contains("version")) {
         isVersion = true
         val ver = readVersion()
         din.read(null_buf, 0, header.payloadSize)
+        println("send verack")
         writeVerack()
-      } else if (cmd == "verack") {
+      } else if (cmd.contains("verack")) {
         isVerack = true
         val vack = readVerack()
         din.read(null_buf, 0, header.payloadSize)
