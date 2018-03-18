@@ -727,6 +727,24 @@ class MessageHandler(dummy: String = "dummy") {
 
   def writeTx(tx: Tx) = {
     var data: Array[Byte] = encodeTx(tx)
+
+    val header = new MessageHeader()
+    header.magic = intToLittleNosin(0x0709110B)
+    val commandName = "getdata".toCharArray()
+    for (i <- 0 until commandName.length) {
+      header.commandName(i) = commandName(i).asInstanceOf[Byte]
+    }
+
+    var checksum = sha256(data)
+
+    header.payloadSize = data.length
+    header.checksum(0) = checksum(0)
+    header.checksum(1) = checksum(1)
+    header.checksum(2) = checksum(2)
+    header.checksum(3) = checksum(3)
+
+    writeHeader(header)
+
     dout.write(data, 0, data.length)
   }
 
@@ -737,14 +755,23 @@ class MessageHandler(dummy: String = "dummy") {
     for (i <- 0 until commandName.length) {
       header.commandName(i) = commandName(i).asInstanceOf[Byte]
     }
-    header.payloadSize = intToLittleNosin(0)
-    header.checksum(0) = 0x5d.asInstanceOf[Byte]
-    header.checksum(1) = 0xf6.asInstanceOf[Byte]
-    header.checksum(2) = 0xe0.asInstanceOf[Byte]
-    header.checksum(3) = 0xe2.asInstanceOf[Byte]
+
+    var buf: ByteBuffer = ByteBuffer.allocate(32 + 4 + 1)
+    buf.put(1.asInstanceOf[Byte]) // num of Inventory
+    buf.putInt(inv.inventory(0).invType)
+    buf.put(inv.inventory(0).hash)
+    var checksum = sha256(buf.array())
+
+    header.payloadSize = 37
+    header.checksum(0) = checksum(0)
+    header.checksum(1) = checksum(1)
+    header.checksum(2) = checksum(2)
+    header.checksum(3) = checksum(3)
 
     writeHeader(header)
-    dout.writeInt(intToLittleNosin(inv.inventory(0).invType))
+
+    dout.writeByte(1)
+    dout.writeInt(inv.inventory(0).invType)
     dout.write(inv.inventory(0).hash)
   }
 
@@ -757,6 +784,7 @@ class MessageHandler(dummy: String = "dummy") {
     inventory.hash = txid
     inv.inventory = Array(inventory)
 
+    println("send inv")
     writeInv(inv)
 
     var null_buf: Array[Byte] = new Array[Byte](10000)
@@ -767,7 +795,7 @@ class MessageHandler(dummy: String = "dummy") {
         commandCharacters(i) = header.commandName(i).asInstanceOf[Char]
       }
       val cmd = new String(commandCharacters)
-      println("recv " + cmd)
+      println("recv " + cmd + " " + header.payloadSize.toString())
       if (cmd.contains("getdata")) {
         var gdata: GetData = readGetData()
         var inv: Inventory = null
