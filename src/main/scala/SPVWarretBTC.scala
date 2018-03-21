@@ -640,9 +640,9 @@ class MessageHandler(dummy: String = "dummy") {
 
     var txout1: TxOut = new TxOut()
     var txout2: TxOut = new TxOut()
-    var balance = 8474938958L
-    var amount = 1474938958L
-    var fee = 10000000L
+    var balance = 130000000L
+    var amount = 10000000L
+    var fee = 1000000L
 
     var toAddr = "2NA98LJynfmvBXVGPvcfM6MWUbfHvrJLofM"
     var decodedToAddr = decodeAddress(toAddr)
