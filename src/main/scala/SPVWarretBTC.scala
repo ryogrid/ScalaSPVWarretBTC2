@@ -808,6 +808,7 @@ class MessageHandler(dummy: String = "dummy") {
           }
         }
         if(inv != null){
+          println("send tx")
           writeTx(tx)
         }
       }else{
