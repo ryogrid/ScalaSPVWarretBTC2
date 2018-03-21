@@ -760,7 +760,7 @@ class MessageHandler(dummy: String = "dummy") {
 
     var buf: ByteBuffer = ByteBuffer.allocate(32 + 4 + 1)
     buf.put(1.asInstanceOf[Byte]) // num of Inventory //1
-    buf.putInt(inv.inventory(0).invType) //4
+    buf.putInt(intToLittleNosin(inv.inventory(0).invType)) //4
     buf.put(inv.inventory(0).hash) //32
     var checksum = hash256(buf.array())
 
