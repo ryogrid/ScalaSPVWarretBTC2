@@ -551,24 +551,24 @@ class MessageHandler(dummy: String = "dummy") {
   }
 
   def writeNetAddr(buf: ByteBuffer): Unit = {
-    buf.putLong(longToLittleNosin(1))
+    buf.putLong(longToLittleNosin(1)) //8
     for (ip <- Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 127, 0, 0, 1)) {
-      buf.put(ip.asInstanceOf[Byte])
+      buf.put(ip.asInstanceOf[Byte]) //16
     }
-    buf.putShort(8333)
+    buf.putShort(8333) //2
   }
 
   def writeVersion(ver: Version): Unit = {
     val buf = ByteBuffer.allocate(86)
-    buf.putInt(intToLittleNosin(70015))
-    buf.putLong(longToLittleNosin(1))
-    buf.putLong(longToLittleNosin((System.currentTimeMillis() / 1000).asInstanceOf[Long]))
-    writeNetAddr(buf)
-    writeNetAddr(buf)
-    buf.putLong(longToLittleNosin(0))
-    buf.put(byteToLittleNosin(0))
-    buf.putInt(intToLittleNosin(0))
-    buf.put(byteToLittleNosin(0))
+    buf.putInt(intToLittleNosin(70015)) //4
+    buf.putLong(longToLittleNosin(1)) //8
+    buf.putLong(longToLittleNosin((System.currentTimeMillis() / 1000).asInstanceOf[Long])) //8
+    writeNetAddr(buf) //26
+    writeNetAddr(buf) //26
+    buf.putLong(longToLittleNosin(0)) //8
+    buf.put(byteToLittleNosin(0)) //1
+    buf.putInt(intToLittleNosin(0)) //4
+    buf.put(byteToLittleNosin(0)) //1
     val verArr = buf.array()
     writeHeader(createHeader(ver, verArr))
     dout.write(verArr, 0, verArr.length)
@@ -757,9 +757,9 @@ class MessageHandler(dummy: String = "dummy") {
     }
 
     var buf: ByteBuffer = ByteBuffer.allocate(32 + 4 + 1)
-    buf.put(1.asInstanceOf[Byte]) // num of Inventory
-    buf.putInt(inv.inventory(0).invType)
-    buf.put(inv.inventory(0).hash)
+    buf.put(1.asInstanceOf[Byte]) // num of Inventory //1
+    buf.putInt(inv.inventory(0).invType) //4
+    buf.put(inv.inventory(0).hash) //32
     var checksum = sha256(buf.array())
 
     header.payloadSize = 37
@@ -771,7 +771,7 @@ class MessageHandler(dummy: String = "dummy") {
     writeHeader(header)
 
     dout.writeByte(1)
-    dout.writeInt(inv.inventory(0).invType)
+    dout.writeInt(intToLittleNosin(inv.inventory(0).invType))
     dout.write(inv.inventory(0).hash)
     dout.flush()
   }
