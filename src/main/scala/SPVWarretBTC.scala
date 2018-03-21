@@ -144,6 +144,7 @@ class MessageHandler(dummy: String = "dummy") {
   val PUBLIC_PATH = "./publicBTCAddress.key"
   var PRIVATE_KEY_WIF: String = null
   var PUBLIC_BTC_ADDRESS: String = null
+  var PUBLIC_KEY: String = null
 
   val OP_DUP = 0x76.asInstanceOf[Byte]
   val OP_EQUAL = 0x87.asInstanceOf[Byte]
@@ -181,11 +182,13 @@ class MessageHandler(dummy: String = "dummy") {
     if (checkFile(PRIVATE_PATH)) {
       PRIVATE_KEY_WIF = readFromFile(PRIVATE_PATH)
       PUBLIC_BTC_ADDRESS = readFromFile(PUBLIC_PATH)
+      PUBLIC_KEY = DatatypeConverter.printHexBinary(generatePublicKey(decodeWIF(PRIVATE_KEY_WIF)))
       println("keys stored:")
     } else {
       var pairs: ArrayList[Array[Byte]] = getKeyPairBytes()
       PRIVATE_KEY_WIF = encodeWIF(pairs.get(0))
       PUBLIC_BTC_ADDRESS = encodeBTCAddress((pairs.get(1)))
+      PUBLIC_KEY = DatatypeConverter.printHexBinary(generatePublicKey(decodeWIF(PRIVATE_KEY_WIF)))
       saveTofFile(PRIVATE_PATH, PRIVATE_KEY_WIF)
       saveTofFile(PUBLIC_PATH, PUBLIC_BTC_ADDRESS)
       println("keys generated:")
@@ -682,7 +685,7 @@ class MessageHandler(dummy: String = "dummy") {
     var beSigned: Array[Byte] = hash256(beHashed)
     var sign: Array[Byte] = getSign(beSigned, secKey)
 
-    var pubKey:Array[Byte] = decodeWIF(PUBLIC_BTC_ADDRESS)
+    var pubKey:Array[Byte] = DatatypeConverter.parseHexBinary(PUBLIC_KEY)
     var lockingScript3: ByteBuffer = ByteBuffer.allocate(sign.length + pubKey.length + 1)
     lockingScript3.put(op_pushdata(sign))
     lockingScript3.put(hashType)
