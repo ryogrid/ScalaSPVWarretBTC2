@@ -653,12 +653,12 @@ class MessageHandler(dummy: String = "dummy") {
     var decodedToAddr = decodeAddress(toAddr)
     var decodedFromAddr = decodeAddress(PUBLIC_BTC_ADDRESS)
 
-    var lockingScript1: ByteBuffer = ByteBuffer.allocate(22)
+    var lockingScript1: ByteBuffer = ByteBuffer.allocate(2 + decodedToAddr.length)
     lockingScript1.put(OP_HASH160)
     lockingScript1.put(op_pushdata(decodedToAddr))
     lockingScript1.put(OP_EQUAL)
 
-    var lockingScript2: ByteBuffer = ByteBuffer.allocate(24)
+    var lockingScript2: ByteBuffer = ByteBuffer.allocate(4 + decodedFromAddr.length)
     lockingScript2.put(OP_DUP)
     lockingScript2.put(OP_HASH160)
     lockingScript2.put(op_pushdata(decodedFromAddr))
@@ -679,17 +679,19 @@ class MessageHandler(dummy: String = "dummy") {
     //署名
     var hashType: Byte = 0x01.asInstanceOf[Byte]
     var hashTypeCode: Array[Byte] = Array(0x01, 0x00, 0x00, 0x00)
-    var secKey: Array[Byte] = decodeWIF(PUBLIC_BTC_ADDRESS)
+    var secKey: Array[Byte] = decodeWIF(PRIVATE_KEY_WIF)
     var encoded_tx: Array[Byte] = encodeInconmpTx(tx)
-    var beHashed: Array[Byte] = new Array[Byte](106+4)
+    var beHashed: Array[Byte] = new Array[Byte](encoded_tx.length+hashTypeCode.length)
     System.arraycopy(encoded_tx, 0, beHashed, 0, encoded_tx.length)
     System.arraycopy(hashTypeCode, 0, beHashed, encoded_tx.length, hashTypeCode.length)
-    var beSigned: Array[Byte] = sha256(beHashed)
+    var beSigned: Array[Byte] = hash256(beHashed)
     var sign: Array[Byte] = getSign(beSigned, secKey)
 
-    var lockingScript3: ByteBuffer = ByteBuffer.allocate(sign.length + secKey.length)
+    var pubKey:Array[Byte] = decodeWIF(PUBLIC_BTC_ADDRESS)
+    var lockingScript3: ByteBuffer = ByteBuffer.allocate(sign.length + pubKey.length + 1)
     lockingScript3.put(op_pushdata(sign))
-    lockingScript3.put(op_pushdata(secKey))
+    lockingScript3.put(hashType)
+    lockingScript3.put(op_pushdata(pubKey))
 
     txin.signatureScript = lockingScript3.array()
 
@@ -735,7 +737,7 @@ class MessageHandler(dummy: String = "dummy") {
       header.commandName(i) = commandName(i).asInstanceOf[Byte]
     }
 
-    var checksum = sha256(data)
+    var checksum = hash256(data)
 
     header.payloadSize = data.length
     header.checksum(0) = checksum(0)
@@ -760,7 +762,7 @@ class MessageHandler(dummy: String = "dummy") {
     buf.put(1.asInstanceOf[Byte]) // num of Inventory //1
     buf.putInt(inv.inventory(0).invType) //4
     buf.put(inv.inventory(0).hash) //32
-    var checksum = sha256(buf.array())
+    var checksum = hash256(buf.array())
 
     header.payloadSize = 37
     header.checksum(0) = checksum(0)

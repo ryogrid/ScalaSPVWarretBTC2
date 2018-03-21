@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="a50a631c-94c6-4c66-80a2-c56740ccd8b2" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/scala/SPVWarretBTC.scala" afterPath="$PROJECT_DIR$/src/main/scala/SPVWarretBTC.scala" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
@@ -24,8 +25,8 @@
       <file leaf-file-name="SPVWarretBTC.scala" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/scala/SPVWarretBTC.scala">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="454">
-              <caret line="775" column="0" lean-forward="false" selection-start-line="775" selection-start-column="0" selection-end-line="775" selection-end-column="0" />
+            <state relative-caret-position="382">
+              <caret line="693" column="43" lean-forward="false" selection-start-line="693" selection-start-column="43" selection-end-line="693" selection-end-column="43" />
               <folding>
                 <element signature="e#0#16#0" expanded="true" />
               </folding>
@@ -37,15 +38,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>arraybuffer</find>
-      <find>decode</find>
-      <find>commandname</find>
-      <find>encodeinco</find>
-      <find>encodeIn</find>
-      <find>decodeAddress</find>
-      <find>parseHexBinary</find>
-      <find>catch</find>
-      <find>copyOfRange</find>
       <find>Arrays</find>
       <find>arraycopy</find>
       <find>readHeader</find>
@@ -63,10 +55,19 @@
       <find>writeverack</find>
       <find>createHeader</find>
       <find>writeinv</find>
-      <find>checksum</find>
       <find>hash</find>
       <find>ar buf: ByteBuffer = ByteBuffer.allocate(106 + tx.txIn(0).signatureScript.length)ar buf: ByteBuffer = ByteBuffer.allocate(106 + tx.txIn(0).signatureScript.length)</find>
       <find>invtype</find>
+      <find>getS</find>
+      <find>hash160</find>
+      <find>op_pushdata</find>
+      <find>encodeWif</find>
+      <find>checksum</find>
+      <find>sha256</find>
+      <find>private_key_wif</find>
+      <find>value</find>
+      <find>btcadd</find>
+      <find>decode</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -409,8 +410,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/scala/SPVWarretBTC.scala">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="454">
-          <caret line="775" column="0" lean-forward="false" selection-start-line="775" selection-start-column="0" selection-end-line="775" selection-end-column="0" />
+        <state relative-caret-position="382">
+          <caret line="693" column="43" lean-forward="false" selection-start-line="693" selection-start-column="43" selection-end-line="693" selection-end-column="43" />
           <folding>
             <element signature="e#0#16#0" expanded="true" />
           </folding>
