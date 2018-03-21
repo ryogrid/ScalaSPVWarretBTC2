@@ -25,8 +25,8 @@
       <file leaf-file-name="SPVWarretBTC.scala" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/scala/SPVWarretBTC.scala">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="413">
-              <caret line="812" column="9" lean-forward="false" selection-start-line="812" selection-start-column="9" selection-end-line="812" selection-end-column="9" />
+            <state relative-caret-position="299">
+              <caret line="291" column="49" lean-forward="false" selection-start-line="291" selection-start-column="49" selection-end-line="291" selection-end-column="49" />
               <folding>
                 <element signature="e#0#16#0" expanded="true" />
               </folding>
@@ -38,8 +38,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>readHeader</find>
-      <find>readHe</find>
       <find>intToBig</find>
       <find>pkScript</find>
       <find>inttobig</find>
@@ -56,7 +54,6 @@
       <find>getS</find>
       <find>hash160</find>
       <find>op_pushdata</find>
-      <find>encodeWif</find>
       <find>checksum</find>
       <find>sha256</find>
       <find>private_key_wif</find>
@@ -68,6 +65,9 @@
       <find>createHeader</find>
       <find>payloadsize</find>
       <find>invtype</find>
+      <find>encodeWif</find>
+      <find>decodewif</find>
+      <find>encodewif</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -363,7 +363,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="scala-line">
           <url>file://$PROJECT_DIR$/src/main/scala/SPVWarretBTC.scala</url>
-          <line>566</line>
+          <line>561</line>
           <properties />
           <option name="timeStamp" value="1" />
         </line-breakpoint>
@@ -410,8 +410,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/scala/SPVWarretBTC.scala">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="413">
-          <caret line="812" column="9" lean-forward="false" selection-start-line="812" selection-start-column="9" selection-end-line="812" selection-end-column="9" />
+        <state relative-caret-position="299">
+          <caret line="291" column="49" lean-forward="false" selection-start-line="291" selection-start-column="49" selection-end-line="291" selection-end-column="49" />
           <folding>
             <element signature="e#0#16#0" expanded="true" />
           </folding>

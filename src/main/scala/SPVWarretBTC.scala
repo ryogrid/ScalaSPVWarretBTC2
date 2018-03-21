@@ -261,9 +261,22 @@ class MessageHandler(dummy: String = "dummy") {
     sha256(sha256(payload))
   }
 
+  def encodeWIF(buf: Array[Byte]): String = {
+    var tmp = new Array[Byte](buf.length + 1)
+    tmp(0) = Integer.parseUnsignedInt(String.valueOf(0xEF)).asInstanceOf[Byte]
+    System.arraycopy(buf, 0, tmp, 1, buf.length)
+    var hashed = hash256(tmp)
+    var tmp2 = new Array[Byte](tmp.length + 4)
+    System.arraycopy(tmp, 0, tmp2, 0, tmp.length)
+    System.arraycopy(hashed, 0, tmp2, tmp.length, 4)
+
+    return encodeBase58(tmp2)
+  }
+
   def decodeWIF(str: String): Array[Byte] = {
     var decoded: Array[Byte] = decodeBase58(str)
     return Arrays.copyOfRange(decoded, 1, decoded.length - 4)
+    //return Arrays.copyOfRange(decoded, 0, decoded.length - 4)
   }
 
   def decodeAddress(str: String): Array[Byte] = {
@@ -271,12 +284,6 @@ class MessageHandler(dummy: String = "dummy") {
   }
 
   def encodeBTCAddress(pubArr: Array[Byte]): String = {
-    //    var prefix: Array[Byte] = Array(0x04)
-    //    var pub_with_prefix: Array[Byte] = new Array[Byte](pubArr.length + 1)
-    //    System.arraycopy(prefix, 0, pub_with_prefix, 0, 1)
-    //    System.arraycopy(pubArr, 0, pub_with_prefix, 1, pubArr.length)
-    //    var hashed: Array[Byte] = hash160(pub_with_prefix)
-
     var hashed: Array[Byte] = hash160(pubArr)
     val hashed_with_prefix: Array[Byte] = new Array[Byte](hashed.length + 1)
     val prefix2: Array[Byte] = Array(0x6f)
@@ -319,18 +326,6 @@ class MessageHandler(dummy: String = "dummy") {
     ret.add(pub_key)
 
     return ret
-  }
-
-  def encodeWIF(buf: Array[Byte]): String = {
-    var tmp = new Array[Byte](buf.length + 1)
-    tmp(0) = Integer.parseUnsignedInt(String.valueOf(0xEF)).asInstanceOf[Byte]
-    System.arraycopy(buf, 0, tmp, 1, buf.length)
-    var hashed = hash256(tmp)
-    var tmp2 = new Array[Byte](buf.length + 4)
-    System.arraycopy(buf, 0, tmp2, 0, buf.length)
-    System.arraycopy(hashed, 0, tmp2, buf.length, 4)
-
-    return encodeBase58(tmp2)
   }
 
   def encodeBase58(input: Array[Byte]): String = {
@@ -855,6 +850,7 @@ object Main {
   def main(args: Array[String]) {
     val messageHandler = new MessageHandler()
     messageHandler.storedKeyCheck()
+
     //    var tmp: ArrayList[Array[Byte]] = messageHandler.getKeyPairBytes()
     //    println(messageHandler.encodeWIF(tmp.get(0)))
     //    println(messageHandler.encodeBTCAddress(tmp.get(1)))
