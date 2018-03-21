@@ -25,8 +25,8 @@
       <file leaf-file-name="SPVWarretBTC.scala" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/scala/SPVWarretBTC.scala">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="382">
-              <caret line="693" column="43" lean-forward="false" selection-start-line="693" selection-start-column="43" selection-end-line="693" selection-end-column="43" />
+            <state relative-caret-position="207">
+              <caret line="507" column="22" lean-forward="false" selection-start-line="507" selection-start-column="11" selection-end-line="507" selection-end-column="22" />
               <folding>
                 <element signature="e#0#16#0" expanded="true" />
               </folding>
@@ -38,8 +38,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>Arrays</find>
-      <find>arraycopy</find>
       <find>readHeader</find>
       <find>readHe</find>
       <find>intToBig</find>
@@ -53,9 +51,7 @@
       <find>writetx</find>
       <find>bytetolitt</find>
       <find>writeverack</find>
-      <find>createHeader</find>
       <find>writeinv</find>
-      <find>hash</find>
       <find>ar buf: ByteBuffer = ByteBuffer.allocate(106 + tx.txIn(0).signatureScript.length)ar buf: ByteBuffer = ByteBuffer.allocate(106 + tx.txIn(0).signatureScript.length)</find>
       <find>invtype</find>
       <find>getS</find>
@@ -68,6 +64,10 @@
       <find>value</find>
       <find>btcadd</find>
       <find>decode</find>
+      <find>hash</find>
+      <find>payload</find>
+      <find>createHeader</find>
+      <find>payloadsize</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -410,8 +410,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/scala/SPVWarretBTC.scala">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="382">
-          <caret line="693" column="43" lean-forward="false" selection-start-line="693" selection-start-column="43" selection-end-line="693" selection-end-column="43" />
+        <state relative-caret-position="207">
+          <caret line="507" column="22" lean-forward="false" selection-start-line="507" selection-start-column="11" selection-end-line="507" selection-end-column="22" />
           <folding>
             <element signature="e#0#16#0" expanded="true" />
           </folding>

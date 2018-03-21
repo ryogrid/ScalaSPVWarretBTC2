@@ -739,7 +739,7 @@ class MessageHandler(dummy: String = "dummy") {
 
     var checksum = hash256(data)
 
-    header.payloadSize = data.length
+    header.payloadSize = intToLittleNosin(data.length)
     header.checksum(0) = checksum(0)
     header.checksum(1) = checksum(1)
     header.checksum(2) = checksum(2)
@@ -764,7 +764,7 @@ class MessageHandler(dummy: String = "dummy") {
     buf.put(inv.inventory(0).hash) //32
     var checksum = hash256(buf.array())
 
-    header.payloadSize = 37
+    header.payloadSize = intToLittleNosin(37) //なぜかここでも変換かけないとダメ
     header.checksum(0) = checksum(0)
     header.checksum(1) = checksum(1)
     header.checksum(2) = checksum(2)
