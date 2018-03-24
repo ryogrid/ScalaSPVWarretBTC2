@@ -59,6 +59,19 @@ import org.bouncycastle.asn1.DERSequenceGenerator
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 
+import org.bouncycastle.asn1.sec.SECNamedCurves
+import org.bouncycastle.asn1.x9.X9ECParameters
+import org.bouncycastle.crypto.params.ECDomainParameters
+import org.bouncycastle.crypto.params.ECPrivateKeyParameters
+import org.bouncycastle.crypto.signers.ECDSASigner
+import java.security.PrivateKey
+
+import org.bouncycastle.asn1.sec.SECNamedCurves
+import org.bouncycastle.asn1.x9.X9ECParameters
+import org.bouncycastle.crypto.params.ECDomainParameters
+import org.bouncycastle.crypto.params.ECPublicKeyParameters
+import org.bouncycastle.crypto.signers.ECDSASigner
+
 class MessageHeader(
                      var magic: Int = 0,
                      var commandName: Array[Byte] = new Array[Byte](12),
@@ -234,17 +247,17 @@ class MessageHandler(dummy: String = "dummy") {
     // Generate the key, skipping as many as desired.
     val privateKeyAttempt = new Array[Byte](32)
     secureRandom.nextBytes(privateKeyAttempt)
-    privateKeyCheck = new BigInteger(1, privateKeyAttempt)
+    privateKeyCheck = new BigInteger(privateKeyAttempt)
     while ((privateKeyCheck.compareTo(BigInteger.ZERO) == 0) || (privateKeyCheck.compareTo(maxKey) == 1)) {
       secureRandom.nextBytes(privateKeyAttempt)
-      privateKeyCheck = new BigInteger(1, privateKeyAttempt)
+      privateKeyCheck = new BigInteger(privateKeyAttempt)
     }
     privateKeyAttempt
   }
 
   def generatePublicKey(privateKey: Array[Byte]): Array[Byte] = try {
     val spec = ECNamedCurveTable.getParameterSpec("secp256k1")
-    val pointQ = spec.getG.multiply(new BigInteger(1, privateKey))
+    val pointQ = spec.getG.multiply(new BigInteger(privateKey))
     pointQ.getEncoded(false)
   } catch {
     case e: Exception =>
@@ -684,6 +697,8 @@ class MessageHandler(dummy: String = "dummy") {
     System.arraycopy(hashTypeCode, 0, beHashed, encoded_tx.length, hashTypeCode.length)
     var beSigned: Array[Byte] = hash256(beHashed)
     var sign: Array[Byte] = getSign(beSigned, secKey)
+    println(sign.length)
+    //println(DatatypeConverter.printHexBinary(sign))
 
     var pubKey:Array[Byte] = DatatypeConverter.parseHexBinary(PUBLIC_KEY)
     var lockingScript3: ByteBuffer = ByteBuffer.allocate(sign.length + pubKey.length + 1)
@@ -696,22 +711,64 @@ class MessageHandler(dummy: String = "dummy") {
     return tx
   }
 
+  def toCanonicalS(s: BigInteger): BigInteger = {
+    val spec = ECNamedCurveTable.getParameterSpec("secp256k1")
+    val HALF_CURVE_ORDER: BigInteger = spec.getN.shiftRight(1)
+    if (s.compareTo(HALF_CURVE_ORDER) <= 0){
+      s
+    } else {
+      spec.getN.subtract(s)
+    }
+  }
+
+
+  def verify(pub: Array[Byte], data: Array[Byte], rs: Array[BigInteger]): Boolean = {
+    val signer = new ECDSASigner
+    val params = ECNamedCurveTable.getParameterSpec("secp256k1")
+    val ecParams = new ECDomainParameters(params.getCurve, params.getG, params.getN, params.getH)
+    val pubKeyParams = new ECPublicKeyParameters(ecParams.getCurve.decodePoint(pub), ecParams)
+    signer.init(false, pubKeyParams)
+    signer.verifySignature(data, rs(0).abs, rs(1).abs)
+  }
+
+  def getSignAndGetRS(priv: Array[Byte], data: Array[Byte]): Array[BigInteger] = {
+    val spec = ECNamedCurveTable.getParameterSpec("secp256k1")
+    val ecParams = new ECDomainParameters(spec.getCurve, spec.getG, spec.getN, spec.getH)
+    val signer = new ECDSASigner()
+    val privKey = new ECPrivateKeyParameters(new BigInteger(priv), ecParams)
+    val params = new ParametersWithRandom(privKey)
+    signer.init(true, params)
+    val sigs = signer.generateSignature(data)
+    sigs
+  }
+
+  // TODO: should be 70 bytes but tamani 72 bytes de dame
   def getSign(data: Array[Byte], pri_key: Array[Byte]): Array[Byte] = {
     try {
       Security.addProvider(new BouncyCastleProvider())
       val spec = ECNamedCurveTable.getParameterSpec("secp256k1")
       val ecdsaSigner = new ECDSASigner()
       val domain = new ECDomainParameters(spec.getCurve, spec.getG, spec.getN)
-      val privateKeyParms = new ECPrivateKeyParameters(new BigInteger(1, pri_key), domain)
+      val privateKeyParms = new ECPrivateKeyParameters(new BigInteger(pri_key), domain)
       val params = new ParametersWithRandom(privateKeyParms)
       ecdsaSigner.init(true, params)
-      val sig: Array[BigInteger] = ecdsaSigner.generateSignature(data)
+
+//      val sigData = new LinkedList[Array[Byte]]()
+//      val pub_key = generatePublicKey(pri_key)
+      val sig = ecdsaSigner.generateSignature(data)
+//      val recoveryId = getRecoveryId(sig(0).toByteArray, sig(1).toByteArray, data, publicKey)
       val s = new ByteArrayOutputStream()
       try {
         val seq = new DERSequenceGenerator(s)
-        seq.addObject(new ASN1Integer(sig(0)))
-        seq.addObject(new ASN1Integer(sig(1)))
+        val s0 = sig(0).abs()
+        val s1 = sig(1).abs()
+        //s.write(s0.toByteArray())
+        //s.write(s1.toByteArray())
+        seq.addObject(new ASN1Integer(s0))
+        //seq.addObject(new ASN1Integer(s1))
+        seq.addObject(new ASN1Integer(toCanonicalS(s1)))
         seq.close()
+
         return s.toByteArray()
       } catch {
         case e: Exception =>
@@ -853,6 +910,16 @@ object Main {
   def main(args: Array[String]) {
     val messageHandler = new MessageHandler()
     messageHandler.storedKeyCheck()
+    //println(DatatypeConverter.printHexBinary(messageHandler.decodeWIF(messageHandler.PRIVATE_KEY_WIF)))
+    val sig = messageHandler.getSign(messageHandler.hash256("abcd".getBytes()),messageHandler.decodeWIF(messageHandler.PRIVATE_KEY_WIF))
+    //println(sig.length)
+    val rs = messageHandler.getSignAndGetRS(messageHandler.decodeWIF(messageHandler.PRIVATE_KEY_WIF), messageHandler.hash256("abcd".getBytes()))
+    //val rs:Array[BigInteger] = Array(new BigInteger(1, Arrays.copyOfRange(sig, 0, 35)), new BigInteger(1, Arrays.copyOfRange(sig, 35, 70)))
+
+    //println(messageHandler.decodeWIF(messageHandler.PRIVATE_KEY_WIF).length)
+    println(messageHandler.verify(messageHandler.generatePublicKey(messageHandler.decodeWIF(messageHandler.PRIVATE_KEY_WIF)), messageHandler.hash256("abcd".getBytes()), rs))
+    val pub = DatatypeConverter.parseHexBinary(messageHandler.PUBLIC_KEY)
+    //println(pub.length)
 
     //    var tmp: ArrayList[Array[Byte]] = messageHandler.getKeyPairBytes()
     //    println(messageHandler.encodeWIF(tmp.get(0)))
