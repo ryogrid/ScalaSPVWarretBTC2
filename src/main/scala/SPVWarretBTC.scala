@@ -253,17 +253,17 @@ class MessageHandler(dummy: String = "dummy") {
     // Generate the key, skipping as many as desired.
     val privateKeyAttempt = new Array[Byte](32)
     secureRandom.nextBytes(privateKeyAttempt)
-    privateKeyCheck = new BigInteger(privateKeyAttempt)
+    privateKeyCheck = new BigInteger(1, privateKeyAttempt)
     while ((privateKeyCheck.compareTo(BigInteger.ZERO) == 0) || (privateKeyCheck.compareTo(maxKey) == 1)) {
       secureRandom.nextBytes(privateKeyAttempt)
-      privateKeyCheck = new BigInteger(privateKeyAttempt)
+      privateKeyCheck = new BigInteger(1, privateKeyAttempt)
     }
     privateKeyAttempt
   }
 
   def generatePublicKey(privateKey: Array[Byte]): Array[Byte] = try {
     val spec = ECNamedCurveTable.getParameterSpec("secp256k1")
-    val pointQ = spec.getG.multiply(new BigInteger(privateKey))
+    val pointQ = spec.getG.multiply(new BigInteger(1, privateKey))
     pointQ.getEncoded(false)
   } catch {
     case e: Exception =>
@@ -702,7 +702,8 @@ class MessageHandler(dummy: String = "dummy") {
     System.arraycopy(encoded_tx, 0, beHashed, 0, encoded_tx.length)
     System.arraycopy(hashTypeCode, 0, beHashed, encoded_tx.length, hashTypeCode.length)
     var beSigned: Array[Byte] = hash256(beHashed)
-    var sign: Array[Byte] = getSign(beSigned, secKey)
+    //var sign: Array[Byte] = getSign(beSigned, secKey)
+    var sign: Array[Byte] = getSignAndGetRS2(beSigned, secKey)
     println(sign.length)
     //println(DatatypeConverter.printHexBinary(sign))
 
@@ -737,15 +738,41 @@ class MessageHandler(dummy: String = "dummy") {
     signer.verifySignature(data, rs(0).abs, rs(1).abs)
   }
 
-  def getSignAndGetRS(priv: Array[Byte], data: Array[Byte]): Array[BigInteger] = {
+  def getSignAndGetRS(data: Array[Byte], priv: Array[Byte]): Array[BigInteger] = {
     val spec = ECNamedCurveTable.getParameterSpec("secp256k1")
     val ecParams = new ECDomainParameters(spec.getCurve, spec.getG, spec.getN, spec.getH)
     val signer = new ECDSASigner()
-    val privKey = new ECPrivateKeyParameters(new BigInteger(priv), ecParams)
+    val privKey = new ECPrivateKeyParameters(new BigInteger(1, priv), ecParams)
     val params = new ParametersWithRandom(privKey)
     signer.init(true, params)
-    val sigs = signer.generateSignature(data)
-    sigs
+    val sig = signer.generateSignature(data)
+    sig
+  }
+
+  def getSignAndGetRS2(priv: Array[Byte], data: Array[Byte]): Array[Byte] = {
+    val spec = ECNamedCurveTable.getParameterSpec("secp256k1")
+    val ecParams = new ECDomainParameters(spec.getCurve, spec.getG, spec.getN, spec.getH)
+    val signer = new ECDSASigner()
+    val privKey = new ECPrivateKeyParameters(new BigInteger(1, priv), ecParams)
+    val params = new ParametersWithRandom(privKey)
+    signer.init(true, params)
+    val sig = signer.generateSignature(data)
+    val s = new ByteArrayOutputStream()
+    try {
+      val seq = new DERSequenceGenerator(s)
+      val s0 = sig(0).abs()
+      val s1 = sig(1).abs()
+      seq.addObject(new ASN1Integer(s0))
+      seq.addObject(new ASN1Integer(s1))
+      //seq.addObject(new ASN1Integer(toCanonicalS(s1)))
+      seq.close()
+
+      return s.toByteArray()
+    } catch {
+      case e: Exception =>
+        println(e)
+        return null
+    }
   }
 
   // TODO: should be 70 bytes but tamani 72 bytes de dame
@@ -755,7 +782,7 @@ class MessageHandler(dummy: String = "dummy") {
       val spec = ECNamedCurveTable.getParameterSpec("secp256k1")
       val ecdsaSigner = new ECDSASigner()
       val domain = new ECDomainParameters(spec.getCurve, spec.getG, spec.getN)
-      val privateKeyParms = new ECPrivateKeyParameters(new BigInteger(pri_key), domain)
+      val privateKeyParms = new ECPrivateKeyParameters(new BigInteger(1, pri_key), domain)
       val params = new ParametersWithRandom(privateKeyParms)
       ecdsaSigner.init(true, params)
 

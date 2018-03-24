@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="a50a631c-94c6-4c66-80a2-c56740ccd8b2" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/scala/SPVWarretBTC.scala" afterPath="$PROJECT_DIR$/src/main/scala/SPVWarretBTC.scala" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
@@ -24,8 +25,8 @@
       <file leaf-file-name="SPVWarretBTC.scala" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/scala/SPVWarretBTC.scala">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="374">
-              <caret line="773" column="30" lean-forward="false" selection-start-line="773" selection-start-column="30" selection-end-line="773" selection-end-column="30" />
+            <state relative-caret-position="207">
+              <caret line="731" column="12" lean-forward="false" selection-start-line="731" selection-start-column="6" selection-end-line="731" selection-end-column="12" />
               <folding>
                 <element signature="e#0#16#0" expanded="true" />
               </folding>
@@ -37,7 +38,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>ar buf: ByteBuffer = ByteBuffer.allocate(106 + tx.txIn(0).signatureScript.length)ar buf: ByteBuffer = ByteBuffer.allocate(106 + tx.txIn(0).signatureScript.length)</find>
       <find>getS</find>
       <find>hash160</find>
       <find>op_pushdata</find>
@@ -65,8 +65,9 @@
       <find>hash256</find>
       <find>RS</find>
       <find>sign</find>
-      <find>getSign</find>
       <find>biginteger</find>
+      <find>getSign</find>
+      <find>verify</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -409,8 +410,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/scala/SPVWarretBTC.scala">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="374">
-          <caret line="773" column="30" lean-forward="false" selection-start-line="773" selection-start-column="30" selection-end-line="773" selection-end-column="30" />
+        <state relative-caret-position="207">
+          <caret line="731" column="12" lean-forward="false" selection-start-line="731" selection-start-column="6" selection-end-line="731" selection-end-column="12" />
           <folding>
             <element signature="e#0#16#0" expanded="true" />
           </folding>
