@@ -771,8 +771,8 @@ class MessageHandler(dummy: String = "dummy") {
         //s.write(s0.toByteArray())
         //s.write(s1.toByteArray())
         seq.addObject(new ASN1Integer(s0))
-        //seq.addObject(new ASN1Integer(s1))
-        seq.addObject(new ASN1Integer(toCanonicalS(s1)))
+        seq.addObject(new ASN1Integer(s1))
+        //seq.addObject(new ASN1Integer(toCanonicalS(s1)))
         seq.close()
 
         return s.toByteArray()

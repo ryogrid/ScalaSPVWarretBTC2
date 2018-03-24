@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="a50a631c-94c6-4c66-80a2-c56740ccd8b2" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/scala/SPVWarretBTC.scala" afterPath="$PROJECT_DIR$/src/main/scala/SPVWarretBTC.scala" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
@@ -25,8 +24,8 @@
       <file leaf-file-name="SPVWarretBTC.scala" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/scala/SPVWarretBTC.scala">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="202">
-              <caret line="917" column="6" lean-forward="false" selection-start-line="917" selection-start-column="6" selection-end-line="917" selection-end-column="6" />
+            <state relative-caret-position="374">
+              <caret line="773" column="30" lean-forward="false" selection-start-line="773" selection-start-column="30" selection-end-line="773" selection-end-column="30" />
               <folding>
                 <element signature="e#0#16#0" expanded="true" />
               </folding>
@@ -410,8 +409,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/scala/SPVWarretBTC.scala">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="202">
-          <caret line="917" column="6" lean-forward="false" selection-start-line="917" selection-start-column="6" selection-end-line="917" selection-end-column="6" />
+        <state relative-caret-position="374">
+          <caret line="773" column="30" lean-forward="false" selection-start-line="773" selection-start-column="30" selection-end-line="773" selection-end-column="30" />
           <folding>
             <element signature="e#0#16#0" expanded="true" />
           </folding>
