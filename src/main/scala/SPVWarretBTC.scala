@@ -143,11 +143,11 @@ class GetData(
 
 class MessageHandler(dummy: String = "dummy") {
   //val client: Socket = null
-  val client: Socket = new Socket("testnet-seed.bitcoin.jonasschnelli.ch", 18333)
+  var client: Socket = null
   //val din: DataInputStream = null
-  val din: DataInputStream = new DataInputStream(client.getInputStream())
+  var din: DataInputStream = null
   //var dout: DataOutputStream = null
-  var dout: DataOutputStream = new DataOutputStream(client.getOutputStream())
+  var dout: DataOutputStream = null
   val ALPHABET: Array[Char] = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz".toCharArray()
   val ENCODED_ZERO = ALPHABET(0)
   var INDEXES: Array[Int] = new Array[Int](128)
@@ -177,6 +177,12 @@ class MessageHandler(dummy: String = "dummy") {
     for (i <- 0 until ALPHABET.length) {
       INDEXES(ALPHABET(i)) = i
     }
+  }
+
+  def init_conn() = {
+    client = new Socket("testnet-seed.bitcoin.jonasschnelli.ch", 18333)
+    din = new DataInputStream(client.getInputStream())
+    dout = new DataOutputStream(client.getOutputStream())
   }
 
   def op_pushdata(obj: Array[Byte]): Array[Byte] = {
@@ -909,10 +915,11 @@ class MessageHandler(dummy: String = "dummy") {
 object Main {
   def main(args: Array[String]) {
     val messageHandler = new MessageHandler()
+    //messageHandler.init_conn()
     messageHandler.storedKeyCheck()
     //println(DatatypeConverter.printHexBinary(messageHandler.decodeWIF(messageHandler.PRIVATE_KEY_WIF)))
     val sig = messageHandler.getSign(messageHandler.hash256("abcd".getBytes()),messageHandler.decodeWIF(messageHandler.PRIVATE_KEY_WIF))
-    //println(sig.length)
+    println(sig.length)
     val rs = messageHandler.getSignAndGetRS(messageHandler.decodeWIF(messageHandler.PRIVATE_KEY_WIF), messageHandler.hash256("abcd".getBytes()))
     //val rs:Array[BigInteger] = Array(new BigInteger(1, Arrays.copyOfRange(sig, 0, 35)), new BigInteger(1, Arrays.copyOfRange(sig, 35, 70)))
 
@@ -927,7 +934,7 @@ object Main {
     //    println(DatatypeConverter.printHexBinary(tmp.get(0)))
     //    println(DatatypeConverter.printHexBinary(tmp.get(1)))
 
-    messageHandler.withBitcoinConnection()
-    messageHandler.sendBTCToTestnetFaucet()
+//    messageHandler.withBitcoinConnection()
+//    messageHandler.sendBTCToTestnetFaucet()
   }
 }
