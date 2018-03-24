@@ -143,11 +143,11 @@ class GetData(
 
 class MessageHandler(dummy: String = "dummy") {
   //val client: Socket = null
-  var client: Socket = null
+  val client: Socket = new Socket("testnet-seed.bitcoin.jonasschnelli.ch", 18333)
   //val din: DataInputStream = null
-  var din: DataInputStream = null
+  val din: DataInputStream = new DataInputStream(client.getInputStream())
   //var dout: DataOutputStream = null
-  var dout: DataOutputStream = null
+  var dout: DataOutputStream = new DataOutputStream(client.getOutputStream())
   val ALPHABET: Array[Char] = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz".toCharArray()
   val ENCODED_ZERO = ALPHABET(0)
   var INDEXES: Array[Int] = new Array[Int](128)
@@ -177,12 +177,6 @@ class MessageHandler(dummy: String = "dummy") {
     for (i <- 0 until ALPHABET.length) {
       INDEXES(ALPHABET(i)) = i
     }
-  }
-
-  def init_conn() = {
-    client = new Socket("testnet-seed.bitcoin.jonasschnelli.ch", 18333)
-    din = new DataInputStream(client.getInputStream())
-    dout = new DataOutputStream(client.getOutputStream())
   }
 
   def op_pushdata(obj: Array[Byte]): Array[Byte] = {
@@ -253,17 +247,17 @@ class MessageHandler(dummy: String = "dummy") {
     // Generate the key, skipping as many as desired.
     val privateKeyAttempt = new Array[Byte](32)
     secureRandom.nextBytes(privateKeyAttempt)
-    privateKeyCheck = new BigInteger(1, privateKeyAttempt)
+    privateKeyCheck = new BigInteger(privateKeyAttempt)
     while ((privateKeyCheck.compareTo(BigInteger.ZERO) == 0) || (privateKeyCheck.compareTo(maxKey) == 1)) {
       secureRandom.nextBytes(privateKeyAttempt)
-      privateKeyCheck = new BigInteger(1, privateKeyAttempt)
+      privateKeyCheck = new BigInteger(privateKeyAttempt)
     }
     privateKeyAttempt
   }
 
   def generatePublicKey(privateKey: Array[Byte]): Array[Byte] = try {
     val spec = ECNamedCurveTable.getParameterSpec("secp256k1")
-    val pointQ = spec.getG.multiply(new BigInteger(1, privateKey))
+    val pointQ = spec.getG.multiply(new BigInteger(privateKey))
     pointQ.getEncoded(false)
   } catch {
     case e: Exception =>
@@ -738,41 +732,15 @@ class MessageHandler(dummy: String = "dummy") {
     signer.verifySignature(data, rs(0).abs, rs(1).abs)
   }
 
-  def getSignAndGetRS(data: Array[Byte], priv: Array[Byte]): Array[BigInteger] = {
+  def getSignAndGetRS(priv: Array[Byte], data: Array[Byte]): Array[BigInteger] = {
     val spec = ECNamedCurveTable.getParameterSpec("secp256k1")
     val ecParams = new ECDomainParameters(spec.getCurve, spec.getG, spec.getN, spec.getH)
     val signer = new ECDSASigner()
     val privKey = new ECPrivateKeyParameters(new BigInteger(priv), ecParams)
     val params = new ParametersWithRandom(privKey)
     signer.init(true, params)
-    val sig = signer.generateSignature(data)
-    sig
-  }
-
-  def getSignAndGetRS2(data: Array[Byte], priv: Array[Byte]): Array[Byte] = {
-    val spec = ECNamedCurveTable.getParameterSpec("secp256k1")
-    val ecParams = new ECDomainParameters(spec.getCurve, spec.getG, spec.getN, spec.getH)
-    val signer = new ECDSASigner()
-    val privKey = new ECPrivateKeyParameters(new BigInteger(1, priv), ecParams)
-    val params = new ParametersWithRandom(privKey)
-    signer.init(true, params)
-    val sig = signer.generateSignature(data)
-    val s = new ByteArrayOutputStream()
-    try {
-      val seq = new DERSequenceGenerator(s)
-      val s0 = sig(0).abs()
-      val s1 = sig(1).abs()
-      seq.addObject(new ASN1Integer(s0))
-      seq.addObject(new ASN1Integer(s1))
-      //seq.addObject(new ASN1Integer(toCanonicalS(s1)))
-      seq.close()
-
-      return s.toByteArray()
-    } catch {
-      case e: Exception =>
-        println(e)
-        return null
-    }
+    val sigs = signer.generateSignature(data)
+    sigs
   }
 
   // TODO: should be 70 bytes but tamani 72 bytes de dame
@@ -782,7 +750,7 @@ class MessageHandler(dummy: String = "dummy") {
       val spec = ECNamedCurveTable.getParameterSpec("secp256k1")
       val ecdsaSigner = new ECDSASigner()
       val domain = new ECDomainParameters(spec.getCurve, spec.getG, spec.getN)
-      val privateKeyParms = new ECPrivateKeyParameters(new BigInteger(1, pri_key), domain)
+      val privateKeyParms = new ECPrivateKeyParameters(new BigInteger(pri_key), domain)
       val params = new ParametersWithRandom(privateKeyParms)
       ecdsaSigner.init(true, params)
 
@@ -813,6 +781,32 @@ class MessageHandler(dummy: String = "dummy") {
     }
 
     return null
+  }
+
+  def getSignAndGetRS2(data: Array[Byte], priv: Array[Byte]): Array[Byte] = {
+    val spec = ECNamedCurveTable.getParameterSpec("secp256k1")
+    val ecParams = new ECDomainParameters(spec.getCurve, spec.getG, spec.getN, spec.getH)
+    val signer = new ECDSASigner()
+    val privKey = new ECPrivateKeyParameters(new BigInteger(1, priv), ecParams)
+    val params = new ParametersWithRandom(privKey)
+    signer.init(true, params)
+    val sig = signer.generateSignature(data)
+    val s = new ByteArrayOutputStream()
+    try {
+      val seq = new DERSequenceGenerator(s)
+      val s0 = sig(0).abs()
+      val s1 = sig(1).abs()
+      seq.addObject(new ASN1Integer(s0))
+      seq.addObject(new ASN1Integer(s1))
+      //seq.addObject(new ASN1Integer(toCanonicalS(s1)))
+      seq.close()
+
+      return s.toByteArray()
+    } catch {
+      case e: Exception =>
+        println(e)
+        return null
+    }
   }
 
   def writeTx(tx: Tx) = {
@@ -942,12 +936,11 @@ class MessageHandler(dummy: String = "dummy") {
 object Main {
   def main(args: Array[String]) {
     val messageHandler = new MessageHandler()
-    messageHandler.init_conn()
     messageHandler.storedKeyCheck()
     //println(DatatypeConverter.printHexBinary(messageHandler.decodeWIF(messageHandler.PRIVATE_KEY_WIF)))
     val sig = messageHandler.getSign(messageHandler.hash256("abcd".getBytes()),messageHandler.decodeWIF(messageHandler.PRIVATE_KEY_WIF))
     //println(sig.length)
-    val rs = messageHandler.getSignAndGetRS(messageHandler.hash256("abcd".getBytes()), messageHandler.decodeWIF(messageHandler.PRIVATE_KEY_WIF))
+    val rs = messageHandler.getSignAndGetRS(messageHandler.decodeWIF(messageHandler.PRIVATE_KEY_WIF), messageHandler.hash256("abcd".getBytes()))
     //val rs:Array[BigInteger] = Array(new BigInteger(1, Arrays.copyOfRange(sig, 0, 35)), new BigInteger(1, Arrays.copyOfRange(sig, 35, 70)))
 
     //println(messageHandler.decodeWIF(messageHandler.PRIVATE_KEY_WIF).length)
