@@ -742,14 +742,14 @@ class MessageHandler(dummy: String = "dummy") {
     val spec = ECNamedCurveTable.getParameterSpec("secp256k1")
     val ecParams = new ECDomainParameters(spec.getCurve, spec.getG, spec.getN, spec.getH)
     val signer = new ECDSASigner()
-    val privKey = new ECPrivateKeyParameters(new BigInteger(1, priv), ecParams)
+    val privKey = new ECPrivateKeyParameters(new BigInteger(priv), ecParams)
     val params = new ParametersWithRandom(privKey)
     signer.init(true, params)
     val sig = signer.generateSignature(data)
     sig
   }
 
-  def getSignAndGetRS2(priv: Array[Byte], data: Array[Byte]): Array[Byte] = {
+  def getSignAndGetRS2(data: Array[Byte], priv: Array[Byte]): Array[Byte] = {
     val spec = ECNamedCurveTable.getParameterSpec("secp256k1")
     val ecParams = new ECDomainParameters(spec.getCurve, spec.getG, spec.getN, spec.getH)
     val signer = new ECDSASigner()
@@ -942,12 +942,12 @@ class MessageHandler(dummy: String = "dummy") {
 object Main {
   def main(args: Array[String]) {
     val messageHandler = new MessageHandler()
-    //messageHandler.init_conn()
+    messageHandler.init_conn()
     messageHandler.storedKeyCheck()
     //println(DatatypeConverter.printHexBinary(messageHandler.decodeWIF(messageHandler.PRIVATE_KEY_WIF)))
     val sig = messageHandler.getSign(messageHandler.hash256("abcd".getBytes()),messageHandler.decodeWIF(messageHandler.PRIVATE_KEY_WIF))
-    println(sig.length)
-    val rs = messageHandler.getSignAndGetRS(messageHandler.decodeWIF(messageHandler.PRIVATE_KEY_WIF), messageHandler.hash256("abcd".getBytes()))
+    //println(sig.length)
+    val rs = messageHandler.getSignAndGetRS(messageHandler.hash256("abcd".getBytes()), messageHandler.decodeWIF(messageHandler.PRIVATE_KEY_WIF))
     //val rs:Array[BigInteger] = Array(new BigInteger(1, Arrays.copyOfRange(sig, 0, 35)), new BigInteger(1, Arrays.copyOfRange(sig, 35, 70)))
 
     //println(messageHandler.decodeWIF(messageHandler.PRIVATE_KEY_WIF).length)
@@ -961,7 +961,7 @@ object Main {
     //    println(DatatypeConverter.printHexBinary(tmp.get(0)))
     //    println(DatatypeConverter.printHexBinary(tmp.get(1)))
 
-//    messageHandler.withBitcoinConnection()
-//    messageHandler.sendBTCToTestnetFaucet()
+    messageHandler.withBitcoinConnection()
+    messageHandler.sendBTCToTestnetFaucet()
   }
 }
